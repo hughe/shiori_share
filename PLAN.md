@@ -27,11 +27,174 @@
   - Consider `NSAllowsLocalNetworking` for local network access
   - Document security implications to users
 
+**Self-Signed Certificate Support**:
+- Many self-hosted Shiori users have self-signed certificates
+- Add "Trust Self-Signed Certificates" toggle in Settings (off by default)
+- Show warning when enabled: "Only enable this for servers you trust"
+- Implement custom `URLSessionDelegate` to handle certificate validation
+- When disabled, show helpful error message if cert validation fails
+
 **Privacy Manifest (iOS 17+)**:
 - Keychain access requires declaration in `PrivacyInfo.xcprivacy`
 - Required API types to declare:
   - `NSPrivacyAccessedAPICategoryUserDefaults` (for App Group defaults)
 - Add privacy manifest to both main app and Share Extension targets
+
+---
+
+## Configuration Reference
+
+> **Single source of truth for all identifiers and settings.**
+> Copy these exactly - typos in identifiers cause silent failures.
+
+### Bundle Identifiers
+| Target | Bundle ID |
+|--------|-----------|
+| Main App | `net.emberson.shiorishare` |
+| Share Extension | `net.emberson.shiorishare.ShareExtension` |
+
+### Shared Access Groups
+| Type | Identifier | Used For |
+|------|------------|----------|
+| App Group | `group.net.emberson.shiorishare` | UserDefaults, Debug Logs |
+| Keychain | `$(TeamIdentifierPrefix)net.emberson.shiorishare.shared` | Credentials |
+
+### Keychain Keys
+| Key | Type | Description |
+|-----|------|-------------|
+| `shiori.serverURL` | String | Server base URL |
+| `shiori.username` | String | Login username |
+| `shiori.password` | String | Login password |
+
+### UserDefaults Keys (App Group)
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `defaultCreateArchive` | Bool | `true` | Create archive by default |
+| `defaultMakePublic` | Bool | `false` | Make bookmarks public by default |
+| `recentTags` | [String] | `[]` | Recently used tags (max 10) |
+| `trustSelfSignedCerts` | Bool | `false` | Allow self-signed SSL certs |
+| `debugLoggingEnabled` | Bool | `false` | Enable debug logging |
+| `cachedSessionID` | String? | `nil` | Cached API session |
+| `sessionTimestamp` | Date? | `nil` | When session was cached |
+
+### Xcode Capabilities (Both Targets)
+1. **App Groups**: Add `group.net.emberson.shiorishare`
+2. **Keychain Sharing**: Add `$(TeamIdentifierPrefix)net.emberson.shiorishare.shared`
+
+### Entitlements File Contents
+
+**ShioriShare.entitlements** (Main App):
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.net.emberson.shiorishare</string>
+    </array>
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)net.emberson.shiorishare.shared</string>
+    </array>
+</dict>
+</plist>
+```
+
+**ShareExtension.entitlements** (Share Extension):
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.application-groups</key>
+    <array>
+        <string>group.net.emberson.shiorishare</string>
+    </array>
+    <key>keychain-access-groups</key>
+    <array>
+        <string>$(AppIdentifierPrefix)net.emberson.shiorishare.shared</string>
+    </array>
+</dict>
+</plist>
+```
+
+### Info.plist - Share Extension
+
+The Share Extension requires specific configuration to appear in the share sheet and accept URLs:
+
+```xml
+<key>NSExtension</key>
+<dict>
+    <key>NSExtensionAttributes</key>
+    <dict>
+        <key>NSExtensionActivationRule</key>
+        <dict>
+            <!-- Activate for URLs -->
+            <key>NSExtensionActivationSupportsWebURLWithMaxCount</key>
+            <integer>1</integer>
+            <!-- Also activate for plain text (may contain URL) -->
+            <key>NSExtensionActivationSupportsText</key>
+            <true/>
+        </dict>
+    </dict>
+    <key>NSExtensionMainStoryboard</key>
+    <string>MainInterface</string>
+    <!-- Or if using programmatic UI: -->
+    <!-- <key>NSExtensionPrincipalClass</key> -->
+    <!-- <string>$(PRODUCT_MODULE_NAME).ShareViewController</string> -->
+    <key>NSExtensionPointIdentifier</key>
+    <string>com.apple.share-services</string>
+</dict>
+```
+
+**Important**: During development, you can use `TRUEPREDICATE` for activation rule, but **App Store requires specific rules** (not TRUEPREDICATE).
+
+### Info.plist - ATS Exception (Optional)
+
+If you need to support HTTP or local network servers:
+
+```xml
+<key>NSAppTransportSecurity</key>
+<dict>
+    <!-- Allow local network connections (e.g., 192.168.x.x) -->
+    <key>NSAllowsLocalNetworking</key>
+    <true/>
+    <!-- For specific HTTP domains (not recommended for production) -->
+    <key>NSExceptionDomains</key>
+    <dict>
+        <key>example.local</key>
+        <dict>
+            <key>NSExceptionAllowsInsecureHTTPLoads</key>
+            <true/>
+        </dict>
+    </dict>
+</dict>
+```
+
+### Privacy Manifest (PrivacyInfo.xcprivacy)
+
+Required for iOS 17+ App Store submission:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>NSPrivacyAccessedAPITypes</key>
+    <array>
+        <dict>
+            <key>NSPrivacyAccessedAPIType</key>
+            <string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+            <key>NSPrivacyAccessedAPITypeReasons</key>
+            <array>
+                <string>CA92.1</string>
+            </array>
+        </dict>
+    </array>
+</dict>
+</plist>
+```
 
 ---
 
@@ -76,6 +239,8 @@ Share Extensions have strict limitations that must be considered:
 - Key: `defaultCreateArchive` → Value: Bool (default: true)
 - Key: `defaultMakePublic` → Value: Bool (default: false)
 - Key: `recentTags` → Value: [String] (most recent tags used, max 10)
+- Key: `trustSelfSignedCerts` → Value: Bool (default: false)
+- Key: `debugLoggingEnabled` → Value: Bool (default: false)
 
 ---
 
@@ -267,6 +432,13 @@ Different apps provide URLs differently via `NSExtensionItem`. Handle multiple `
 │                                 │
 │  ───────────────────────────    │
 │                                 │
+│  Advanced                       │
+│                                 │
+│  ☐ Trust Self-Signed Certs  ⚠️  │
+│  ☐ Enable Debug Logging         │
+│                                 │
+│  ───────────────────────────    │
+│                                 │
 │  [Test Connection]  [Save]      │
 │                                 │
 │  ⚠️ Error: Could not connect    │
@@ -278,8 +450,11 @@ Different apps provide URLs differently via `NSExtensionItem`. Handle multiple `
 **Features**:
 - Form with server URL, username, password fields
 - Password field with show/hide toggle (eye icon)
-- Two toggles for default preferences
-- "Test Connection" button (validates credentials with Shiori API)
+- Two toggles for default preferences (Create Archive, Make Public)
+- Advanced section:
+  - Trust Self-Signed Certificates toggle (with warning icon/text)
+  - Enable Debug Logging toggle
+- "Test Connection" button with detailed diagnostics on failure
 - "Save" button (saves to Keychain and UserDefaults)
 - Status message area for success/error feedback
 
@@ -506,6 +681,37 @@ Validate credentials exist in Keychain
 
 ## Edge Cases & Special Handling
 
+### Share Source Validation
+Different apps share content differently. Handle gracefully:
+
+| Share Source | Content Type | Handling |
+|--------------|--------------|----------|
+| Safari, Chrome, Firefox | `public.url` | Direct URL extraction |
+| Some apps | `public.plain-text` | Parse text for URL pattern |
+| Twitter/X, Reddit | Mixed | Try URL first, then parse text |
+| Text selection | Plain text | Extract URL if present in text |
+| Images, files | Non-URL | Show error: "No URL found" |
+
+**Error message for non-URL content**:
+```
+┌─────────────────────────────────┐
+│  Save to Shiori          [✕]   │
+├─────────────────────────────────┤
+│                                 │
+│         ⚠️                       │
+│                                 │
+│  No URL Found                   │
+│                                 │
+│  The shared content doesn't     │
+│  contain a URL. Try sharing     │
+│  from a browser or app that     │
+│  shares links.                  │
+│                                 │
+│           [OK]                  │
+│                                 │
+└─────────────────────────────────┘
+```
+
 ### Duplicate Bookmarks
 - Shiori may return an error if the URL already exists
 - Handle gracefully: show "Bookmark already saved" message (not an error)
@@ -543,6 +749,37 @@ Validate credentials exist in Keychain
 - Use `UINotificationFeedbackGenerator` for these patterns
 - No haptics on macOS (not supported)
 
+### Debug Logging
+When "Enable Debug Logging" is on in Settings:
+- Log API requests (method, URL, headers excluding auth)
+- Log API responses (status code, body preview)
+- Log errors with full context
+- Store logs in App Group container (`logs/` directory)
+- Auto-delete logs older than 7 days
+- Main app provides "Export Debug Log" button (shares as text file)
+- **Never log passwords or full session tokens**
+
+**Log format**:
+```
+[2024-01-15 10:30:45] INFO: POST /api/login -> 200 OK (145ms)
+[2024-01-15 10:30:46] INFO: POST /api/bookmarks -> 201 Created (892ms)
+[2024-01-15 10:30:46] INFO: Bookmark saved: id=123
+[2024-01-15 10:31:02] ERROR: POST /api/bookmarks -> SSL certificate error
+```
+
+### Connection Diagnostics
+"Test Connection" button should provide detailed failure information:
+
+| Error Type | Diagnostic Message |
+|------------|-------------------|
+| DNS failure | "Could not find server. Check the URL is correct." |
+| Connection refused | "Server not responding. Is Shiori running?" |
+| Timeout | "Connection timed out. Server may be slow or unreachable." |
+| SSL/TLS error | "Certificate error. Enable 'Trust Self-Signed Certs' if using self-signed certificate." |
+| 401/403 | "Authentication failed. Check username and password." |
+| 404 | "Shiori API not found at this URL. Check the server URL." |
+| 5xx | "Server error. Shiori may be experiencing issues." |
+
 ---
 
 ## Accessibility
@@ -572,146 +809,284 @@ Validate credentials exist in Keychain
 
 ## Development Phases
 
+### Complexity Legend
+- **[S]** Small - Straightforward, < 30 mins
+- **[M]** Medium - Some complexity, 30 mins - 2 hours
+- **[L]** Large - Significant work, 2+ hours or requires research
+
+### Phase Dependencies
+```
+Phase 1 ─────┬──→ Phase 2 ──→ Phase 3 ──┬──→ Phase 6 ──→ Phase 7 ──→ Phase 8 ──→ Phase 9
+             │                          │
+             └──→ Phase 4 ──────────────┤
+             └──→ Phase 5 ──────────────┘
+                  (4 & 5 can parallel with 2 & 3)
+```
+
+---
+
 ### Phase 1: Project Setup
-- [ ] Create multiplatform Xcode project (iOS + macOS)
-- [ ] Configure Bundle IDs
-- [ ] Add Share Extension target
-- [ ] Enable App Groups capability for both targets
+- [ ] [S] Create multiplatform Xcode project (iOS + macOS)
+- [ ] [S] Configure Bundle IDs (see Configuration Reference)
+- [ ] [S] Add Share Extension target
+- [ ] [M] Enable App Groups capability for both targets
   - Group ID: `group.net.emberson.shiorishare`
-- [ ] Enable Keychain Sharing capability for both targets
+- [ ] [M] Enable Keychain Sharing capability for both targets
   - Access Group: `$(TeamIdentifierPrefix)net.emberson.shiorishare.shared`
-- [ ] Set minimum deployment targets (iOS 15.0, macOS 12.0)
-- [ ] Set up project structure with Shared folder
-- [ ] Add Privacy Manifest (`PrivacyInfo.xcprivacy`) to both targets
-- [ ] Configure ATS exception for local network (optional, in Info.plist)
-- [ ] Create `AppConstants.swift` with all shared constants
+- [ ] [S] Set minimum deployment targets (iOS 15.0, macOS 12.0)
+- [ ] [S] Set up project structure with Shared folder
+- [ ] [S] Add Privacy Manifest (`PrivacyInfo.xcprivacy`) to both targets
+- [ ] [S] Configure ATS exception for local network (optional, in Info.plist)
+- [ ] [S] Create `AppConstants.swift` with all shared constants
+
+**✓ Verification**:
+1. Project builds without errors for both iOS and macOS
+2. Share Extension target appears in scheme selector
+3. Both targets show App Groups and Keychain Sharing in Signing & Capabilities
+4. Run on Simulator - main app launches (even if blank)
+
+---
 
 ### Phase 2: Keychain Helper & Storage
-- [ ] Create `KeychainHelper.swift` utility class
-- [ ] Implement save/read/delete methods for credentials
-- [ ] Add error handling for Keychain operations
-- [ ] Test Keychain access from both main app and extension
-- [ ] Create `SettingsManager.swift` for UserDefaults access
-- [ ] Create `String+URL.swift` with URL validation extensions
-- [ ] Create `URLExtractor.swift` for share sheet URL extraction
+- [ ] [M] Create `KeychainHelper.swift` utility class
+- [ ] [M] Implement save/read/delete methods for credentials
+- [ ] [S] Add error handling for Keychain operations
+- [ ] [L] Test Keychain access from both main app and extension ⚠️ *Critical - do this before proceeding*
+- [ ] [M] Create `SettingsManager.swift` for UserDefaults access
+- [ ] [S] Create `String+URL.swift` with URL validation extensions
+- [ ] [M] Create `URLExtractor.swift` for share sheet URL extraction
   - Handle `public.url`, `public.plain-text` providers
   - Add fallback logic for different app sources
+  - Return nil for non-URL content (images, files, etc.)
+- [ ] [M] Create `DebugLogger.swift` utility
+  - Log to App Group container
+  - Auto-cleanup logs older than 7 days
+  - Respect `debugLoggingEnabled` setting
+
+**✓ Verification**:
+1. Write a test value to Keychain from main app
+2. Read that value from Share Extension - **must succeed**
+3. Write a test value to App Group UserDefaults from main app
+4. Read that value from Share Extension - **must succeed**
+5. If either fails, check Common Pitfalls section before proceeding
+
+---
 
 ### Phase 3: Shiori API Client
-- [ ] Create `ShioriAPI.swift` client
-- [ ] Implement login method (`POST /api/login`)
-- [ ] Implement add bookmark method (`POST /api/bookmarks`)
-- [ ] Add proper error handling and typed errors
-- [ ] Parse keywords into tags array format
-- [ ] Handle public field as integer (0/1)
-- [ ] Create `SessionManager.swift` for session caching
+- [ ] [M] Create `ShioriAPI.swift` client
+- [ ] [M] Implement login method (`POST /api/login`)
+- [ ] [M] Implement add bookmark method (`POST /api/bookmarks`)
+- [ ] [M] Add proper error handling and typed errors
+  - Create `ConnectionError` enum with detailed error types
+  - Map URLError codes to user-friendly diagnostics
+- [ ] [L] Implement self-signed certificate support
+  - Custom `URLSessionDelegate` for certificate validation
+  - Respect `trustSelfSignedCerts` setting
+- [ ] [S] Parse keywords into tags array format
+- [ ] [S] Handle public field as integer (0/1)
+- [ ] [M] Create `SessionManager.swift` for session caching
   - Cache session ID with timestamp in App Group UserDefaults
   - Implement TTL check (5-10 minutes)
   - Auto-refresh on 401 response
-- [ ] Add unit tests for API client
-- [ ] **Test API integration manually** before building UI
+- [ ] [S] Add debug logging to all API calls
+- [ ] [M] Add unit tests for API client
+- [ ] [M] **Test API integration manually** before building UI ⚠️ *Critical checkpoint*
+
+**✓ Verification** (requires a running Shiori server):
+1. Call login API with valid credentials → returns session ID
+2. Call login API with invalid credentials → returns auth error
+3. Call add bookmark API → bookmark appears in Shiori
+4. Test with self-signed cert server (if available)
+5. All unit tests pass
+
+---
 
 ### Phase 4: Main App - Instructions Screen
-- [ ] Create `InstructionsView.swift`
-- [ ] Add welcome text and app description
-- [ ] Add step-by-step usage instructions
-- [ ] Add "Tip" section about reordering share sheet
-- [ ] Add "About Shiori" section with link
-- [ ] Add navigation bar with gear icon
-- [ ] Navigation to Settings screen
+*Can be developed in parallel with Phase 2 & 3*
+
+- [ ] [M] Create `InstructionsView.swift`
+- [ ] [S] Add welcome text and app description
+- [ ] [S] Add step-by-step usage instructions
+- [ ] [S] Add "Tip" section about reordering share sheet
+- [ ] [S] Add "About Shiori" section with link
+- [ ] [S] Add navigation bar with gear icon
+- [ ] [S] Navigation to Settings screen
+
+**✓ Verification**:
+1. App launches and shows Instructions screen
+2. Gear icon appears in navigation bar
+3. Tapping gear navigates to Settings (can be placeholder)
+4. All text is readable and properly formatted
+
+---
 
 ### Phase 5: Main App - Settings Screen
-- [ ] Create `SettingsView.swift`
-- [ ] Add form with server URL, username, password fields
-- [ ] Add password visibility toggle (eye icon)
-- [ ] Add URL normalization (auto-add https://, strip trailing slash)
-- [ ] Add validation for URL format (must start with http/https)
-- [ ] Add Create Archive and Make Public toggles
-- [ ] Implement "Save" button
+*Can be developed in parallel with Phase 2 & 3*
+
+- [ ] [M] Create `SettingsView.swift`
+- [ ] [S] Add form with server URL, username, password fields
+- [ ] [S] Add password visibility toggle (eye icon)
+- [ ] [S] Add URL normalization (auto-add https://, strip trailing slash)
+- [ ] [S] Add validation for URL format (must start with http/https)
+- [ ] [S] Add Create Archive and Make Public toggles
+- [ ] [M] Add Advanced section:
+  - Trust Self-Signed Certificates toggle (with warning)
+  - Enable Debug Logging toggle
+  - Export Debug Log button (share sheet)
+- [ ] [M] Implement "Save" button
   - Save credentials to Keychain
   - Clear cached session when credentials change
   - Save defaults to UserDefaults
   - Show success/error message
-- [ ] Implement "Test Connection" button
+- [ ] [L] Implement "Test Connection" button
   - Call Shiori login API
-  - Show success/error message
-- [ ] Load existing settings on view appear
-- [ ] Add proper error messages for all validation cases
-- [ ] Add accessibility labels to all form elements
+  - Show detailed diagnostic messages on failure
+  - Display specific error (DNS, timeout, SSL, auth, etc.)
+- [ ] [S] Load existing settings on view appear
+- [ ] [S] Add proper error messages for all validation cases
+- [ ] [S] Add accessibility labels to all form elements
+
+**✓ Verification**:
+1. Can enter and save server URL, username, password
+2. Settings persist after closing and reopening app
+3. Test Connection works with valid Shiori server
+4. Test Connection shows appropriate error for invalid URL/credentials
+5. Toggle states persist correctly
+
+---
 
 ### Phase 6: Share Extension - UI
-- [ ] Create `ShareViewController.swift` (UIViewController subclass)
-- [ ] Set up `UIHostingController` to embed SwiftUI views
-- [ ] Create `ShareExtensionView.swift` (main SwiftUI view)
-- [ ] Design form UI with all fields (Title, Description, Keywords, toggles)
-- [ ] Use `URLExtractor` to extract URL from share input
-- [ ] Extract page title from share input (if available)
-- [ ] Pre-fill title field with page title (or show placeholder if empty)
-- [ ] Load default toggle values from UserDefaults
-- [ ] Add recent tags as tappable chips below Keywords field
+*Requires Phase 2 (URLExtractor, SettingsManager) and Phase 3 (API client)*
+
+- [ ] [M] Create `ShareViewController.swift` (UIViewController subclass)
+- [ ] [M] Set up `UIHostingController` to embed SwiftUI views
+- [ ] [L] Create `ShareExtensionView.swift` (main SwiftUI view)
+- [ ] [M] Design form UI with all fields (Title, Description, Keywords, toggles)
+- [ ] [M] Use `URLExtractor` to extract URL from share input
+  - Handle various content types (see Share Source Validation)
+  - Show "No URL Found" error for non-URL content
+- [ ] [S] Extract page title from share input (if available)
+- [ ] [S] Pre-fill title field with page title (or show placeholder if empty)
+- [ ] [S] Load default toggle values from UserDefaults
+- [ ] [M] Add recent tags as tappable chips below Keywords field
   - Load from `recentTags` in UserDefaults
   - Tapping chip appends tag to Keywords field
-- [ ] Implement Cancel button (dismiss extension)
-- [ ] Implement Save button with disabled state during save
-- [ ] Create state management for editing/saving/success/error states
-- [ ] Add accessibility labels to all form elements
+- [ ] [S] Implement Cancel button (dismiss extension)
+- [ ] [S] Implement Save button with disabled state during save
+- [ ] [M] Create state management for editing/saving/success/error states
+- [ ] [S] Add accessibility labels to all form elements
+
+**✓ Verification**:
+1. Share from Safari → extension appears in share sheet
+2. URL is displayed in the form
+3. Page title is pre-filled (if available)
+4. Cancel button dismisses the extension
+5. Form fields are editable
+6. Recent tags appear (if any exist in UserDefaults)
+
+---
 
 ### Phase 7: Share Extension - Save Flow
-- [ ] Check if credentials exist in Keychain
+- [ ] [S] Check if credentials exist in Keychain
   - If not, show "Server Not Configured" error
-- [ ] Validate URL is present
+- [ ] [S] Validate URL is present
   - If not, show "Invalid Input" error
-- [ ] Disable Save button and show saving spinner
-- [ ] Use `beginBackgroundTask` to prevent termination during save
-- [ ] Use `SessionManager` for login (cached or fresh)
+- [ ] [S] Disable Save button and show saving spinner
+- [ ] [M] Use `beginBackgroundTask` to prevent termination during save
+- [ ] [M] Use `SessionManager` for login (cached or fresh)
   - Handle auth errors
   - Handle network errors
-- [ ] Parse keywords into tags array
-- [ ] Call add bookmark API
+- [ ] [S] Parse keywords into tags array
+- [ ] [M] Call add bookmark API
   - **Capture bookmark ID from response**
   - Handle server errors
   - Handle network errors
   - Handle duplicate bookmark (treat as success)
-- [ ] Update `recentTags` in UserDefaults with newly used tags
-- [ ] Play haptic feedback (success or error)
-- [ ] Show success screen with "Done" and "Open in Shiori" buttons
+- [ ] [S] Update `recentTags` in UserDefaults with newly used tags
+- [ ] [S] Play haptic feedback (success or error)
+- [ ] [M] Show success screen with "Done" and "Open in Shiori" buttons
   - "Open in Shiori" uses `extensionContext?.open()` with `{serverURL}/bookmark/{id}`
-- [ ] Implement retry logic for retryable errors
-- [ ] End background task on completion
+- [ ] [M] Implement retry logic for retryable errors
+- [ ] [S] End background task on completion
+
+**✓ Verification**:
+1. Save bookmark → appears in Shiori server
+2. "Done" button closes extension
+3. "Open in Shiori" opens bookmark in Safari
+4. Tags are saved to recent tags list
+5. Haptic feedback triggers on success
+6. Saving spinner appears while saving
+
+---
 
 ### Phase 8: Share Extension - Error Handling
-- [ ] Create error enum with all error types
-- [ ] Implement error views for each error state
-- [ ] Add retry functionality for network/server errors
-- [ ] Add proper error messages with user-friendly text
-- [ ] Handle "bookmark already exists" as success case
+- [ ] [S] Create error enum with all error types
+- [ ] [M] Implement error views for each error state
+- [ ] [M] Add retry functionality for network/server errors
+- [ ] [S] Add proper error messages with user-friendly text
+- [ ] [S] Handle "bookmark already exists" as success case
+
+**✓ Verification**:
+1. No credentials configured → "Server Not Configured" error
+2. Wrong credentials → "Authentication Failed" error
+3. Server unreachable → "Connection Failed" with Retry button
+4. Retry button works and re-attempts save
+
+---
 
 ### Phase 9: Integration Smoke Test
-- [ ] Verify happy path end-to-end with real Shiori server
-- [ ] Test: Configure server in app → Share from Safari → Save bookmark
-- [ ] Verify bookmark appears in Shiori
-- [ ] Fix any integration issues before polishing
+⚠️ **Critical checkpoint before polish phase**
+
+- [ ] [M] Verify happy path end-to-end with real Shiori server
+- [ ] [M] Test: Configure server in app → Share from Safari → Save bookmark
+- [ ] [S] Verify bookmark appears in Shiori
+- [ ] [L] Fix any integration issues before polishing
+
+**✓ Verification** (all must pass before proceeding):
+1. Fresh install: Configure credentials in main app
+2. Share a URL from Safari → extension opens
+3. Fill in optional fields (description, tags)
+4. Save → success screen appears
+5. Tap "Open in Shiori" → Safari opens bookmark page
+6. Verify bookmark exists in Shiori with correct data
+7. Share another URL → recent tags appear from previous save
+
+---
 
 ### Phase 10: Testing & Polish (iOS/iPadOS)
-- [ ] Test all error scenarios comprehensively
-- [ ] Test on physical iOS device
-- [ ] Test on iPad (different screen sizes)
-- [ ] Verify share extension appears in Safari
-- [ ] Test with missing/invalid credentials
-- [ ] Test network failure scenarios
-- [ ] Test session caching (save multiple bookmarks quickly)
-- [ ] Test VoiceOver accessibility
-- [ ] Test Dynamic Type scaling
-- [ ] Add app icon
-- [ ] Polish UI spacing and fonts
+- [ ] [M] Test all error scenarios comprehensively
+- [ ] [M] Test on physical iOS device
+- [ ] [M] Test on iPad (different screen sizes)
+- [ ] [S] Verify share extension appears in Safari
+- [ ] [S] Test with missing/invalid credentials
+- [ ] [M] Test network failure scenarios
+- [ ] [S] Test session caching (save multiple bookmarks quickly)
+- [ ] [M] Test VoiceOver accessibility
+- [ ] [M] Test Dynamic Type scaling
+- [ ] [M] Add app icon
+- [ ] [M] Polish UI spacing and fonts
+
+**✓ Verification**:
+1. All items in Testing Checklist section pass
+2. App works on physical device (not just Simulator)
+3. No console warnings or errors during normal use
+4. UI looks correct on smallest and largest iPhone sizes
+
+---
 
 ### Phase 11: macOS Support (Optional)
-- [ ] Add macOS target to main app
-- [ ] Adapt UI for macOS window sizing
-- [ ] Add macOS Share Extension target
-- [ ] Test share extension in Safari on Mac
-- [ ] Test keyboard navigation
-- [ ] Adapt UI for larger screens
+- [ ] [M] Add macOS target to main app
+- [ ] [M] Adapt UI for macOS window sizing
+- [ ] [L] Add macOS Share Extension target
+- [ ] [M] Test share extension in Safari on Mac
+- [ ] [M] Test keyboard navigation
+- [ ] [S] Adapt UI for larger screens
+
+**✓ Verification**:
+1. Main app runs on macOS with proper window sizing
+2. Share extension appears in Safari share menu on Mac
+3. Full keyboard navigation works (Tab, Enter, Escape)
+4. Cmd+S saves, Escape cancels
 
 ---
 
@@ -729,7 +1104,8 @@ ShioriShare/
 │   ├── Utilities/
 │   │   ├── KeychainHelper.swift
 │   │   ├── SettingsManager.swift
-│   │   └── URLExtractor.swift          # Share sheet URL extraction
+│   │   ├── URLExtractor.swift          # Share sheet URL extraction
+│   │   └── DebugLogger.swift           # Optional debug logging
 │   ├── Extensions/
 │   │   └── String+URL.swift            # URL validation helpers
 │   ├── Constants/
@@ -813,6 +1189,10 @@ class SettingsManager {
     // Recent tags (max 10, most recent first)
     var recentTags: [String] { get set }
 
+    // Advanced settings
+    var trustSelfSignedCerts: Bool { get set }
+    var debugLoggingEnabled: Bool { get set }
+
     func addRecentTags(_ tags: [String]) {
         var current = recentTags
         for tag in tags {
@@ -878,12 +1258,40 @@ enum ShareExtensionState {
 
 enum ShareError: Error {
     case notConfigured
+    case noURLFound               // Shared content has no URL
     case invalidURL
     case authenticationFailed
-    case connectionFailed
+    case connection(ConnectionError)
     case serverError(code: Int)
     case duplicateBookmark        // Treat as success in UI
     case unknown(message: String)
+}
+
+/// Detailed connection error for diagnostics
+enum ConnectionError: Error {
+    case dnsLookupFailed
+    case connectionRefused
+    case timeout
+    case sslCertificateError(String)
+    case noInternet
+    case unknown(Error)
+
+    var userMessage: String {
+        switch self {
+        case .dnsLookupFailed:
+            return "Could not find server. Check the URL is correct."
+        case .connectionRefused:
+            return "Server not responding. Is Shiori running?"
+        case .timeout:
+            return "Connection timed out. Server may be slow or unreachable."
+        case .sslCertificateError:
+            return "Certificate error. Enable 'Trust Self-Signed Certs' if using self-signed certificate."
+        case .noInternet:
+            return "No internet connection."
+        case .unknown:
+            return "Connection failed. Check your network and try again."
+        }
+    }
 }
 ```
 
@@ -916,6 +1324,44 @@ class URLExtractor {
 }
 ```
 
+### Debug Logger
+
+```swift
+class DebugLogger {
+    static let shared = DebugLogger()
+    private let settings = SettingsManager.shared
+    private let logDirectory: URL  // App Group container/logs/
+
+    func log(_ message: String, level: LogLevel = .info) {
+        guard settings.debugLoggingEnabled else { return }
+        let timestamp = ISO8601DateFormatter().string(from: Date())
+        let entry = "[\(timestamp)] \(level.rawValue): \(message)\n"
+        appendToLog(entry)
+    }
+
+    func logAPIRequest(_ method: String, url: String) {
+        log("\(method) \(url)")
+    }
+
+    func logAPIResponse(_ method: String, url: String, status: Int, duration: TimeInterval) {
+        log("\(method) \(url) -> \(status) (\(Int(duration * 1000))ms)")
+    }
+
+    func logError(_ error: Error, context: String) {
+        log("\(context): \(error.localizedDescription)", level: .error)
+    }
+
+    func exportLogs() -> URL?  // Returns file URL for sharing
+    func clearOldLogs()        // Delete logs older than 7 days
+
+    enum LogLevel: String {
+        case info = "INFO"
+        case error = "ERROR"
+        case debug = "DEBUG"
+    }
+}
+```
+
 ---
 
 ## Testing Checklist
@@ -925,19 +1371,38 @@ class URLExtractor {
 - [ ] Settings load from Keychain on app launch
 - [ ] URL validation works correctly
 - [ ] Test Connection successfully validates credentials
-- [ ] Test Connection shows appropriate errors
+- [ ] Test Connection shows detailed diagnostic errors:
+  - [ ] DNS failure message
+  - [ ] Connection refused message
+  - [ ] Timeout message
+  - [ ] SSL certificate error message
+  - [ ] Authentication failed message
 - [ ] Default toggles save to UserDefaults
+- [ ] Self-signed certificate toggle works
+- [ ] Debug logging toggle enables/disables logging
+- [ ] Export Debug Log creates shareable file
 
 ### Share Extension
 - [ ] Share extension appears in Safari share sheet
 - [ ] URL is correctly extracted from share
 - [ ] Page title is correctly extracted (when available)
+- [ ] Sharing non-URL content shows "No URL Found" error
+- [ ] Sharing from various apps works:
+  - [ ] Safari
+  - [ ] Chrome/Firefox
+  - [ ] Twitter/X
+  - [ ] Reddit
 - [ ] Form validates required fields
+- [ ] Recent tags appear as tappable chips
+- [ ] Tapping tag chip adds it to Keywords field
 - [ ] Keywords parse correctly into tags array
+- [ ] Tags are saved to recent tags after successful save
 - [ ] Login succeeds with valid credentials
 - [ ] Login fails appropriately with invalid credentials
 - [ ] Bookmark saves successfully
-- [ ] Success message shows and auto-closes
+- [ ] Success screen shows Done and Open in Shiori buttons
+- [ ] Open in Shiori opens correct URL in browser
+- [ ] Haptic feedback plays on success/error
 - [ ] All error states display correctly
 - [ ] Retry works for retryable errors
 - [ ] Cancel button closes extension
@@ -948,6 +1413,102 @@ class URLExtractor {
 - [ ] Works on iPhone (various sizes)
 - [ ] Works on iPad
 - [ ] (Optional) Works on macOS
+
+---
+
+## Common Pitfalls & Troubleshooting
+
+Issues you're likely to encounter, with solutions:
+
+### Share Extension Not Appearing in Share Sheet
+
+**Symptoms**: Extension doesn't show up when you tap Share in Safari.
+
+**Solutions**:
+1. **Check activation rules**: Ensure `NSExtensionActivationRule` in Info.plist is correct
+2. **Check signing**: Both app and extension must be signed with same team
+3. **Delete and reinstall**: iOS caches extension info; delete app completely and reinstall
+4. **Check bundle ID**: Extension bundle ID must be prefixed with main app bundle ID
+5. **Restart device**: Sometimes required after first install
+
+### Keychain Access Fails in Extension
+
+**Symptoms**: Credentials saved in main app return nil in Share Extension.
+
+**Solutions**:
+1. **Verify access group**: Must match exactly in both targets' entitlements
+2. **Check `$(AppIdentifierPrefix)`**: This is your Team ID + dot (e.g., `ABC123XYZ.`)
+3. **Provisioning profiles**: Regenerate profiles after adding Keychain Sharing capability
+4. **Query attributes**: Use same `kSecAttrAccessGroup` when saving and reading
+
+**Debug code**:
+```swift
+// Print your actual access group
+let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword]
+var result: AnyObject?
+SecItemCopyMatching(query as CFDictionary, &result)
+// Check Console.app for keychain errors
+```
+
+### App Group UserDefaults Returns Nil
+
+**Symptoms**: Values saved in main app are nil in extension (or vice versa).
+
+**Solutions**:
+1. **Suite name must match**: `UserDefaults(suiteName: "group.net.emberson.shiorishare")`
+2. **Call `synchronize()`**: Though usually unnecessary, try `userDefaults.synchronize()` after writing
+3. **Check entitlements**: App Group must be in both targets' entitlements
+4. **Verify in Xcode**: Signing & Capabilities → App Groups should show the group
+
+### Extension Crashes on Launch
+
+**Symptoms**: Share sheet briefly shows extension then dismisses.
+
+**Solutions**:
+1. **Check memory usage**: Extensions limited to ~120MB; avoid large frameworks
+2. **Check Console.app**: Filter by your app name for crash logs
+3. **Simplify initialization**: Move heavy work out of `viewDidLoad`
+4. **Check for missing frameworks**: Ensure all linked frameworks are embedded
+
+### "Could Not Connect" Despite Correct Credentials
+
+**Symptoms**: Test Connection fails even though server is reachable in browser.
+
+**Solutions**:
+1. **ATS blocking HTTP**: Add ATS exception for HTTP URLs or local network
+2. **Self-signed cert**: Enable "Trust Self-Signed Certificates" toggle
+3. **Trailing slash**: Try both `https://shiori.example.com` and `https://shiori.example.com/`
+4. **Port in URL**: Ensure port is included if non-standard: `https://shiori.example.com:8080`
+5. **VPN/proxy**: iOS may route differently than browser; check network settings
+
+### Extension Works in Simulator But Not Device
+
+**Symptoms**: Everything works in Simulator, fails on real device.
+
+**Solutions**:
+1. **Provisioning profiles**: Device profiles must include App Groups and Keychain capabilities
+2. **Device registered**: Ensure test device is in Apple Developer portal
+3. **Clean build**: Product → Clean Build Folder, then rebuild
+4. **Check device logs**: Window → Devices and Simulators → View Device Logs
+
+### Session Token Expires Too Quickly
+
+**Symptoms**: "Authentication failed" errors despite correct credentials.
+
+**Solutions**:
+1. **Check Shiori server settings**: Some servers have short session timeouts
+2. **Clock sync**: Ensure device time is accurate (affects token validation)
+3. **Clear cached session**: Force re-login by clearing `cachedSessionID`
+
+### Bookmark Saves But Doesn't Appear in Shiori
+
+**Symptoms**: Success shown but bookmark not in Shiori web UI.
+
+**Solutions**:
+1. **Check Shiori logs**: Server may have rejected with details
+2. **Refresh Shiori UI**: Sometimes requires hard refresh
+3. **Check API response**: Enable debug logging to see actual response
+4. **Duplicate handling**: Shiori may silently skip duplicates
 
 ---
 
