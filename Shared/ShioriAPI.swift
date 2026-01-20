@@ -1,0 +1,325 @@
+import Foundation
+
+// MARK: - API Models
+
+struct LoginRequest: Codable {
+    let username: String
+    let password: String
+    let remember: Bool
+}
+
+struct LoginResponse: Codable {
+    let session: String
+    let account: Account?
+    
+    struct Account: Codable {
+        let id: Int
+        let username: String
+        let owner: Bool?
+    }
+}
+
+struct BookmarkRequest: Codable {
+    let url: String
+    let title: String?
+    let excerpt: String?
+    let tags: [TagObject]?
+    let createArchive: Bool
+    let `public`: Int
+    
+    struct TagObject: Codable {
+        let name: String
+    }
+}
+
+struct BookmarkResponse: Codable {
+    let id: Int
+    let url: String
+    let title: String?
+    let excerpt: String?
+}
+
+// MARK: - API Errors
+
+enum ShioriAPIError: LocalizedError {
+    case notConfigured
+    case invalidURL
+    case invalidCredentials
+    case connectionFailed(Error)
+    case serverError(Int)
+    case unauthorized
+    case notFound
+    case certificateError
+    case decodingError(Error)
+    case unknownError(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .notConfigured:
+            return "Server not configured. Please open Shiori Share app to configure your server."
+        case .invalidURL:
+            return "Invalid server URL"
+        case .invalidCredentials:
+            return "Invalid username or password"
+        case .connectionFailed(let error):
+            return "Connection failed: \(error.localizedDescription)"
+        case .serverError(let code):
+            return "Server error (\(code))"
+        case .unauthorized:
+            return "Session expired. Please try again."
+        case .notFound:
+            return "Shiori API not found. Check server URL."
+        case .certificateError:
+            return "Certificate error. Enable 'Trust Self-Signed Certs' in Settings if using self-signed certificate."
+        case .decodingError:
+            return "Invalid server response"
+        case .unknownError(let error):
+            return error.localizedDescription
+        }
+    }
+    
+    var isRetryable: Bool {
+        switch self {
+        case .connectionFailed, .serverError, .unauthorized:
+            return true
+        default:
+            return false
+        }
+    }
+}
+
+// MARK: - Shiori API Client
+
+final class ShioriAPI {
+    static let shared = ShioriAPI()
+    
+    private let keychain = KeychainHelper.shared
+    private let settings = SettingsManager.shared
+    private let logger = DebugLogger.shared
+    
+    private init() {}
+    
+    // MARK: - Public API
+    
+    func login() async throws -> String {
+        guard let serverURL = keychain.serverURL,
+              let username = keychain.username,
+              let password = keychain.password else {
+            throw ShioriAPIError.notConfigured
+        }
+        
+        guard let baseURL = URL(string: serverURL) else {
+            throw ShioriAPIError.invalidURL
+        }
+        
+        let loginURL = baseURL.appendingPathSafely(AppConstants.API.loginPath)
+        
+        var request = URLRequest(url: loginURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.timeoutInterval = AppConstants.Timing.networkTimeout
+        
+        let loginRequest = LoginRequest(username: username, password: password, remember: true)
+        request.httpBody = try JSONEncoder().encode(loginRequest)
+        
+        logger.apiRequest(method: "POST", url: loginURL.absoluteString)
+        let startTime = Date()
+        
+        do {
+            let (data, response) = try await createSession().data(for: request)
+            let duration = Date().timeIntervalSince(startTime)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw ShioriAPIError.unknownError(NSError(domain: "ShioriAPI", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response"]))
+            }
+            
+            logger.apiResponse(method: "POST", url: loginURL.absoluteString, statusCode: httpResponse.statusCode, duration: duration)
+            
+            switch httpResponse.statusCode {
+            case 200:
+                let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
+                
+                settings.cachedSessionID = loginResponse.session
+                settings.sessionTimestamp = Date()
+                
+                logger.info("Login successful for user: \(username)")
+                return loginResponse.session
+                
+            case 401, 403:
+                throw ShioriAPIError.invalidCredentials
+            case 404:
+                throw ShioriAPIError.notFound
+            case 500...599:
+                throw ShioriAPIError.serverError(httpResponse.statusCode)
+            default:
+                throw ShioriAPIError.serverError(httpResponse.statusCode)
+            }
+        } catch let error as ShioriAPIError {
+            throw error
+        } catch let error as DecodingError {
+            logger.error(error, context: "Login decoding error")
+            throw ShioriAPIError.decodingError(error)
+        } catch {
+            throw mapNetworkError(error)
+        }
+    }
+    
+    func addBookmark(
+        url: String,
+        title: String?,
+        description: String?,
+        keywords: String?,
+        createArchive: Bool,
+        makePublic: Bool
+    ) async throws -> BookmarkResponse {
+        let sessionID = try await getValidSession()
+        
+        guard let serverURL = keychain.serverURL,
+              let baseURL = URL(string: serverURL) else {
+            throw ShioriAPIError.notConfigured
+        }
+        
+        let bookmarksURL = baseURL.appendingPathSafely(AppConstants.API.bookmarksPath)
+        
+        var request = URLRequest(url: bookmarksURL)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sessionID, forHTTPHeaderField: "X-Session-Id")
+        request.timeoutInterval = AppConstants.Timing.networkTimeout
+        
+        let tags = parseKeywords(keywords)
+        let bookmarkRequest = BookmarkRequest(
+            url: url,
+            title: title,
+            excerpt: description,
+            tags: tags,
+            createArchive: createArchive,
+            public: makePublic ? 1 : 0
+        )
+        
+        request.httpBody = try JSONEncoder().encode(bookmarkRequest)
+        
+        logger.apiRequest(method: "POST", url: bookmarksURL.absoluteString, headers: ["X-Session-Id": "[REDACTED]"])
+        let startTime = Date()
+        
+        do {
+            let (data, response) = try await createSession().data(for: request)
+            let duration = Date().timeIntervalSince(startTime)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw ShioriAPIError.unknownError(NSError(domain: "ShioriAPI", code: -1))
+            }
+            
+            logger.apiResponse(method: "POST", url: bookmarksURL.absoluteString, statusCode: httpResponse.statusCode, duration: duration)
+            
+            switch httpResponse.statusCode {
+            case 200, 201:
+                let bookmarkResponse = try JSONDecoder().decode(BookmarkResponse.self, from: data)
+                
+                if let tags = tags {
+                    settings.addRecentTags(tags.map { $0.name })
+                }
+                
+                logger.info("Bookmark saved: id=\(bookmarkResponse.id)")
+                return bookmarkResponse
+                
+            case 401:
+                settings.clearSession()
+                throw ShioriAPIError.unauthorized
+            case 404:
+                throw ShioriAPIError.notFound
+            case 500...599:
+                throw ShioriAPIError.serverError(httpResponse.statusCode)
+            default:
+                throw ShioriAPIError.serverError(httpResponse.statusCode)
+            }
+        } catch let error as ShioriAPIError {
+            throw error
+        } catch let error as DecodingError {
+            logger.error(error, context: "Bookmark decoding error")
+            throw ShioriAPIError.decodingError(error)
+        } catch {
+            throw mapNetworkError(error)
+        }
+    }
+    
+    // MARK: - Session Management
+    
+    private func getValidSession() async throws -> String {
+        if settings.isSessionValid, let session = settings.cachedSessionID {
+            return session
+        }
+        
+        return try await login()
+    }
+    
+    func clearSession() {
+        settings.clearSession()
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func parseKeywords(_ keywords: String?) -> [BookmarkRequest.TagObject]? {
+        guard let keywords = keywords?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !keywords.isEmpty else {
+            return nil
+        }
+        
+        let tags = keywords
+            .components(separatedBy: ",")
+            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .filter { !$0.isEmpty }
+            .map { BookmarkRequest.TagObject(name: $0) }
+        
+        return tags.isEmpty ? nil : tags
+    }
+    
+    private func createSession() -> URLSession {
+        if settings.trustSelfSignedCerts {
+            let config = URLSessionConfiguration.default
+            return URLSession(configuration: config, delegate: SelfSignedCertDelegate(), delegateQueue: nil)
+        }
+        return URLSession.shared
+    }
+    
+    private func mapNetworkError(_ error: Error) -> ShioriAPIError {
+        let nsError = error as NSError
+        
+        switch nsError.code {
+        case NSURLErrorServerCertificateUntrusted,
+             NSURLErrorSecureConnectionFailed,
+             NSURLErrorServerCertificateHasBadDate,
+             NSURLErrorServerCertificateNotYetValid,
+             NSURLErrorServerCertificateHasUnknownRoot:
+            return .certificateError
+            
+        case NSURLErrorCannotFindHost,
+             NSURLErrorCannotConnectToHost,
+             NSURLErrorNetworkConnectionLost,
+             NSURLErrorDNSLookupFailed,
+             NSURLErrorNotConnectedToInternet,
+             NSURLErrorTimedOut:
+            return .connectionFailed(error)
+            
+        default:
+            return .unknownError(error)
+        }
+    }
+}
+
+// MARK: - Self-Signed Certificate Delegate
+
+private class SelfSignedCertDelegate: NSObject, URLSessionDelegate {
+    func urlSession(
+        _ session: URLSession,
+        didReceive challenge: URLAuthenticationChallenge,
+        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
+    ) {
+        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
+           let trust = challenge.protectionSpace.serverTrust {
+            completionHandler(.useCredential, URLCredential(trust: trust))
+        } else {
+            completionHandler(.performDefaultHandling, nil)
+        }
+    }
+}

@@ -1,5 +1,23 @@
 # Agent Instructions
 
+## Build Commands
+
+```bash
+make build-sim    # Build for iOS Simulator
+make build-ios    # Build for iOS device
+make build-macos  # Build for macOS (requires signing)
+make open         # Open project in Xcode
+make clean        # Clean build artifacts
+```
+
+## Project Structure
+
+- `ShioriShare/` - Main app (Instructions + Settings screens)
+- `ShareExtension/` - Share extension (bookmark form)
+- `Shared/` - Shared code (API client, keychain, settings)
+
+## Issue Tracking
+
 This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
 
 ## Quick Reference
