@@ -3,10 +3,10 @@
 .PHONY: all build build-ios build-macos clean test open help
 
 # Default target
-all: build
+all: build-sim
 
-# Build all platforms
-build: build-ios build-macos
+# Build all platforms (iOS only - macOS requires additional work for share extension)
+build: build-sim
 
 # Build for iOS
 build-ios:
