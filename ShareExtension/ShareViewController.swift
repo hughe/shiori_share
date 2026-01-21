@@ -374,7 +374,7 @@ struct ShareExtensionView: View {
         } else {
             parts = [tag]
         }
-        keywords = parts.joined(separator: ", ")
+        keywords = parts.joined(separator: ", ") + ", "
     }
     
     private func playHapticFeedback(type: UINotificationFeedbackGenerator.FeedbackType) {
