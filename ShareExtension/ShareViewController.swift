@@ -276,6 +276,11 @@ struct ShareExtensionView: View {
         createArchive = settings.defaultCreateArchive
         makePublic = settings.defaultMakePublic
         
+        // Refresh popular tags from server in background
+        Task {
+            await ShioriAPI.shared.refreshPopularTags()
+        }
+        
         do {
             let content = try await URLExtractor.extract(from: extensionContext)
             extractedURL = content.url

@@ -42,6 +42,7 @@ enum AppConstants {
     enum API {
         static let loginPath = "/api/v1/auth/login"
         static let bookmarksPath = "/api/bookmarks"
+        static let tagsPath = "/api/tags"
         static let logoutPath = "/api/logout"
     }
     

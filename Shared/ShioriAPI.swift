@@ -39,6 +39,12 @@ struct BookmarkResponse: Codable {
     let excerpt: String?
 }
 
+struct TagResponse: Codable {
+    let id: Int
+    let name: String
+    let nBookmarks: Int
+}
+
 // MARK: - API Errors
 
 enum ShioriAPIError: LocalizedError {
@@ -253,6 +259,72 @@ final class ShioriAPI {
             throw ShioriAPIError.decodingError(error)
         } catch {
             throw mapNetworkError(error)
+        }
+    }
+    
+    func fetchTags() async throws -> [TagResponse] {
+        let sessionID = try await getValidSession()
+        
+        guard let serverURL = keychain.serverURL,
+              let baseURL = URL(string: serverURL) else {
+            throw ShioriAPIError.notConfigured
+        }
+        
+        let tagsURL = baseURL.appendingPathSafely(AppConstants.API.tagsPath)
+        
+        var request = URLRequest(url: tagsURL)
+        request.httpMethod = "GET"
+        request.setValue(sessionID, forHTTPHeaderField: "X-Session-Id")
+        request.timeoutInterval = AppConstants.Timing.networkTimeout
+        
+        logger.apiRequest(method: "GET", url: tagsURL.absoluteString)
+        let startTime = Date()
+        
+        do {
+            let (data, response) = try await createSession().data(for: request)
+            let duration = Date().timeIntervalSince(startTime)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                throw ShioriAPIError.unknownError(NSError(domain: "ShioriAPI", code: -1))
+            }
+            
+            logger.apiResponse(method: "GET", url: tagsURL.absoluteString, statusCode: httpResponse.statusCode, duration: duration)
+            
+            switch httpResponse.statusCode {
+            case 200:
+                let tags = try JSONDecoder().decode([TagResponse].self, from: data)
+                logger.info("Fetched \(tags.count) tags from server")
+                return tags
+                
+            case 401:
+                settings.clearSession()
+                throw ShioriAPIError.unauthorized
+            case 404:
+                throw ShioriAPIError.notFound
+            default:
+                throw ShioriAPIError.serverError(httpResponse.statusCode)
+            }
+        } catch let error as ShioriAPIError {
+            throw error
+        } catch let error as DecodingError {
+            logger.error(error, context: "Tags decoding error")
+            throw ShioriAPIError.decodingError(error)
+        } catch {
+            throw mapNetworkError(error)
+        }
+    }
+    
+    func refreshPopularTags() async {
+        do {
+            let tags = try await fetchTags()
+            let popularTags = tags
+                .sorted { $0.nBookmarks > $1.nBookmarks }
+                .prefix(AppConstants.Defaults.maxRecentTags)
+                .map { $0.name }
+            settings.recentTags = Array(popularTags)
+            logger.info("Updated popular tags cache: \(popularTags)")
+        } catch {
+            logger.error(error, context: "Failed to refresh popular tags")
         }
     }
     
