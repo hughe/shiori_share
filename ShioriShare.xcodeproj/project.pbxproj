@@ -9,8 +9,6 @@
 /* Begin PBXBuildFile section */
 		A1000001 /* ShioriShareApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000001 /* ShioriShareApp.swift */; };
 		A1000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000002 /* ContentView.swift */; };
-		A100000B /* InstructionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000020 /* InstructionsView.swift */; };
-		A100000C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000021 /* SettingsView.swift */; };
 		A1000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B1000003 /* Assets.xcassets */; };
 		A1000004 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000010 /* AppConstants.swift */; };
 		A1000005 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B1000006 /* PrivacyInfo.xcprivacy */; };
@@ -19,9 +17,10 @@
 		A1000008 /* String+URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000013 /* String+URL.swift */; };
 		A1000009 /* URLExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000014 /* URLExtractor.swift */; };
 		A100000A /* DebugLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000015 /* DebugLogger.swift */; };
+		A100000B /* InstructionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000020 /* InstructionsView.swift */; };
+		A100000C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000021 /* SettingsView.swift */; };
 		A100000D /* ShioriAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016 /* ShioriAPI.swift */; };
 		A2000001 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000001 /* ShareViewController.swift */; };
-		A2000009 /* ShioriAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016 /* ShioriAPI.swift */; };
 		A2000002 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000010 /* AppConstants.swift */; };
 		A2000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B2000003 /* PrivacyInfo.xcprivacy */; };
 		A2000004 /* KeychainHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000011 /* KeychainHelper.swift */; };
@@ -29,6 +28,7 @@
 		A2000006 /* String+URL.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000013 /* String+URL.swift */; };
 		A2000007 /* URLExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000014 /* URLExtractor.swift */; };
 		A2000008 /* DebugLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000015 /* DebugLogger.swift */; };
+		A2000009 /* ShioriAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016 /* ShioriAPI.swift */; };
 		A3000001 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = P2000001 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -59,8 +59,6 @@
 /* Begin PBXFileReference section */
 		B1000001 /* ShioriShareApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShioriShareApp.swift; sourceTree = "<group>"; };
 		B1000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		B1000020 /* InstructionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionsView.swift; sourceTree = "<group>"; };
-		B1000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B1000003 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		B1000004 /* ShioriShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShioriShare.entitlements; sourceTree = "<group>"; };
 		B1000005 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -72,6 +70,8 @@
 		B1000014 /* URLExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLExtractor.swift; sourceTree = "<group>"; };
 		B1000015 /* DebugLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogger.swift; sourceTree = "<group>"; };
 		B1000016 /* ShioriAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShioriAPI.swift; sourceTree = "<group>"; };
+		B1000020 /* InstructionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionsView.swift; sourceTree = "<group>"; };
+		B1000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B2000001 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		B2000002 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
 		B2000003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -418,9 +418,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ShioriShare/ShioriShare.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 98G9HCZ2YM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShioriShare/Info.plist;
@@ -454,9 +455,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = ShioriShare/ShioriShare.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 98G9HCZ2YM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShioriShare/Info.plist;
@@ -488,9 +490,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 98G9HCZ2YM;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Save to Shiori";
@@ -519,9 +522,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShareExtension/ShareExtension.entitlements;
+				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 98G9HCZ2YM;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = ShareExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Save to Shiori";

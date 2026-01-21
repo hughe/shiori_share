@@ -38,8 +38,9 @@ enum AppConstants {
     }
     
     // MARK: - API Endpoints
+    // Login uses v1 API, bookmarks use legacy API (more stable)
     enum API {
-        static let loginPath = "/api/login"
+        static let loginPath = "/api/v1/auth/login"
         static let bookmarksPath = "/api/bookmarks"
         static let logoutPath = "/api/logout"
     }

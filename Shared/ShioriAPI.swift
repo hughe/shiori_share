@@ -9,13 +9,13 @@ struct LoginRequest: Codable {
 }
 
 struct LoginResponse: Codable {
-    let session: String
-    let account: Account?
+    let ok: Bool
+    let message: LoginMessage?
     
-    struct Account: Codable {
-        let id: Int
-        let username: String
-        let owner: Bool?
+    struct LoginMessage: Codable {
+        let token: String
+        let session: String
+        let expires: Int?
     }
 }
 
@@ -139,11 +139,16 @@ final class ShioriAPI {
             case 200:
                 let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
                 
-                settings.cachedSessionID = loginResponse.session
+                guard loginResponse.ok, let message = loginResponse.message else {
+                    throw ShioriAPIError.invalidCredentials
+                }
+                
+                // Use session ID for legacy API (not JWT token)
+                settings.cachedSessionID = message.session
                 settings.sessionTimestamp = Date()
                 
                 logger.info("Login successful for user: \(username)")
-                return loginResponse.session
+                return message.session
                 
             case 401, 403:
                 throw ShioriAPIError.invalidCredentials
@@ -188,16 +193,24 @@ final class ShioriAPI {
         request.timeoutInterval = AppConstants.Timing.networkTimeout
         
         let tags = parseKeywords(keywords)
-        let bookmarkRequest = BookmarkRequest(
-            url: url,
-            title: title,
-            excerpt: description,
-            tags: tags,
-            createArchive: createArchive,
-            public: makePublic ? 1 : 0
-        )
         
-        request.httpBody = try JSONEncoder().encode(bookmarkRequest)
+        // Build JSON manually to avoid null values that Shiori may not handle
+        var body: [String: Any] = [
+            "url": url,
+            "createArchive": createArchive,
+            "public": makePublic ? 1 : 0
+        ]
+        if let title = title, !title.isEmpty {
+            body["title"] = title
+        }
+        if let description = description, !description.isEmpty {
+            body["excerpt"] = description
+        }
+        if let tags = tags {
+            body["tags"] = tags.map { ["name": $0.name] }
+        }
+        
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
         
         logger.apiRequest(method: "POST", url: bookmarksURL.absoluteString, headers: ["X-Session-Id": "[REDACTED]"])
         let startTime = Date()
