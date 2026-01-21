@@ -61,6 +61,18 @@ struct ShareExtensionView: View {
     private let settings = SettingsManager.shared
     private let keychain = KeychainHelper.shared
     
+    private var displayedTags: [String] {
+        Array(settings.recentTags.prefix(AppConstants.Defaults.displayedTagChips))
+    }
+    
+    private var tagSuggestions: [String] {
+        guard let lastTag = keywords.components(separatedBy: ",").last?.trimmingCharacters(in: .whitespaces).lowercased(),
+              !lastTag.isEmpty else {
+            return []
+        }
+        return settings.recentTags.filter { $0.lowercased().hasPrefix(lastTag) && !keywords.lowercased().contains($0.lowercased()) }
+    }
+    
     var body: some View {
         NavigationView {
             Group {
@@ -124,11 +136,25 @@ struct ShareExtensionView: View {
                     .frame(minHeight: 60, maxHeight: 100)
                 
                 TextField("Keywords (comma-separated)", text: $keywords)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
                 
-                if !settings.recentTags.isEmpty {
+                if !tagSuggestions.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
-                            ForEach(settings.recentTags, id: \.self) { tag in
+                            ForEach(tagSuggestions.prefix(5), id: \.self) { tag in
+                                Button(tag) {
+                                    completeTag(tag)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .controlSize(.small)
+                            }
+                        }
+                    }
+                } else if !displayedTags.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack {
+                            ForEach(displayedTags, id: \.self) { tag in
                                 Button(tag) {
                                     addTag(tag)
                                 }
@@ -200,7 +226,7 @@ struct ShareExtensionView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.orange)
             
-            Text(error.localizedDescription ?? "An error occurred")
+            Text(error.localizedDescription)
                 .font(.headline)
                 .multilineTextAlignment(.center)
             
@@ -339,6 +365,16 @@ struct ShareExtensionView: View {
         } else if !keywords.contains(tag) {
             keywords += ", \(tag)"
         }
+    }
+    
+    private func completeTag(_ tag: String) {
+        var parts = keywords.components(separatedBy: ",").map { $0.trimmingCharacters(in: .whitespaces) }
+        if !parts.isEmpty {
+            parts[parts.count - 1] = tag
+        } else {
+            parts = [tag]
+        }
+        keywords = parts.joined(separator: ", ")
     }
     
     private func playHapticFeedback(type: UINotificationFeedbackGenerator.FeedbackType) {
