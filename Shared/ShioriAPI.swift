@@ -280,7 +280,7 @@ final class ShioriAPI {
         
         let tags = keywords
             .components(separatedBy: ",")
-            .map { $0.trimmingCharacters(in: .whitespaces) }
+            .map { $0.trimmingCharacters(in: .whitespaces).lowercased() }
             .filter { !$0.isEmpty }
             .map { BookmarkRequest.TagObject(name: $0) }
         
