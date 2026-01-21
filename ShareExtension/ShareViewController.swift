@@ -182,19 +182,10 @@ struct ShareExtensionView: View {
             Text("Bookmark saved!")
                 .font(.headline)
             
-            HStack(spacing: 16) {
-                Button("Done") {
-                    onComplete()
-                }
-                .buttonStyle(.bordered)
-                
-                if let serverURL = keychain.serverURL {
-                    Button("Open in Shiori") {
-                        openInShiori(bookmarkId: bookmarkId, serverURL: serverURL)
-                    }
-                    .buttonStyle(.borderedProminent)
-                }
+            Button("Done") {
+                onComplete()
             }
+            .buttonStyle(.borderedProminent)
         }
         .onAppear {
             playHapticFeedback(type: .success)
@@ -340,17 +331,6 @@ struct ShareExtensionView: View {
             keywords = tag
         } else if !keywords.contains(tag) {
             keywords += ", \(tag)"
-        }
-    }
-    
-    private func openInShiori(bookmarkId: Int, serverURL: String) {
-        guard let url = URL(string: "\(serverURL)/bookmark/\(bookmarkId)") else {
-            onComplete()
-            return
-        }
-        
-        extensionContext?.open(url) { _ in
-            onComplete()
         }
     }
     
