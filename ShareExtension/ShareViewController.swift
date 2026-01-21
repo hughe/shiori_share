@@ -189,6 +189,9 @@ struct ShareExtensionView: View {
         }
         .onAppear {
             playHapticFeedback(type: .success)
+            DispatchQueue.main.asyncAfter(deadline: .now() + AppConstants.Timing.successAutoCloseDelay) {
+                onComplete()
+            }
         }
     }
     
