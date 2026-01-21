@@ -110,7 +110,6 @@ struct ShareExtensionView: View {
             Section {
                 if let url = extractedURL {
                     Text(url.absoluteString)
-                        .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
                 }
