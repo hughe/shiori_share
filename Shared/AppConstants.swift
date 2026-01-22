@@ -35,7 +35,7 @@ enum AppConstants {
         static let trustSelfSignedCerts = false
         static let debugLoggingEnabled = false
         static let maxRecentTags = 50
-        static let displayedTagChips = 10
+        static let displayedTagChips = 5
     }
     
     // MARK: - API Endpoints
