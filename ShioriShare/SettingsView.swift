@@ -63,11 +63,13 @@ struct SettingsView: View {
                 .keyboardType(.URL)
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
+                .accessibilityHint("Enter your Shiori server URL, for example https://shiori.example.com")
             
             TextField("Username", text: $username)
                 .textContentType(.username)
                 .autocapitalization(.none)
                 .disableAutocorrection(true)
+                .accessibilityHint("Enter your Shiori username")
             
             HStack {
                 if showPassword {
@@ -87,6 +89,7 @@ struct SettingsView: View {
                         .foregroundColor(.secondary)
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel(showPassword ? "Hide password" : "Show password")
             }
         } header: {
             Text("Server Configuration")
@@ -96,7 +99,9 @@ struct SettingsView: View {
     private var defaultSettingsSection: some View {
         Section {
             Toggle("Create Archive", isOn: $createArchive)
+                .accessibilityHint("When enabled, Shiori will save an offline copy of the page")
             Toggle("Make Public", isOn: $makePublic)
+                .accessibilityHint("When enabled, bookmarks will be publicly visible")
         } header: {
             Text("Default Settings")
         }
@@ -109,8 +114,10 @@ struct SettingsView: View {
                     Text("Trust Self-Signed Certs")
                     Image(systemName: "exclamationmark.triangle")
                         .foregroundColor(.orange)
+                        .accessibilityHidden(true)
                 }
             }
+            .accessibilityHint("Enable this only for servers with self-signed certificates that you trust")
             
             if trustSelfSignedCerts {
                 Text("Only enable this for servers you trust.")
@@ -119,6 +126,7 @@ struct SettingsView: View {
             }
             
             Toggle("Enable Debug Logging", isOn: $debugLoggingEnabled)
+                .accessibilityHint("When enabled, saves detailed logs for troubleshooting")
         } header: {
             Text("Advanced")
         }

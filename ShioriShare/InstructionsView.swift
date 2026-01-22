@@ -91,7 +91,7 @@ struct InstructionsView: View {
             Label("About Shiori", systemImage: "info.circle")
                 .font(.headline)
             
-            Text("Shiori is a simple bookmark manager built with Go.")
+            Text("Shiori is a simple, self-hosted, bookmark manager built with Go.")
                 .font(.body)
                 .foregroundColor(.secondary)
             

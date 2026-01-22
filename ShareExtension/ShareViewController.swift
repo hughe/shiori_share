@@ -124,6 +124,7 @@ struct ShareExtensionView: View {
                     Text(url.absoluteString)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
+                        .accessibilityLabel("URL to save: \(url.absoluteString)")
                 }
             } header: {
                 Text("URL")
@@ -131,13 +132,17 @@ struct ShareExtensionView: View {
             
             Section {
                 TextField("Title", text: $title)
+                    .accessibilityHint("Optional title for the bookmark")
                 
                 TextEditor(text: $description)
                     .frame(minHeight: 60, maxHeight: 100)
+                    .accessibilityLabel("Description")
+                    .accessibilityHint("Optional description or notes for the bookmark")
                 
                 TextField("Keywords (comma-separated)", text: $keywords)
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
+                    .accessibilityHint("Enter tags separated by commas")
                 
                 if !tagSuggestions.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
@@ -148,9 +153,11 @@ struct ShareExtensionView: View {
                                 }
                                 .buttonStyle(.borderedProminent)
                                 .controlSize(.small)
+                                .accessibilityLabel("Complete with \(tag)")
                             }
                         }
                     }
+                    .accessibilityLabel("Tag suggestions")
                 } else if !displayedTags.isEmpty {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack {
@@ -160,9 +167,11 @@ struct ShareExtensionView: View {
                                 }
                                 .buttonStyle(.bordered)
                                 .controlSize(.small)
+                                .accessibilityLabel("Add tag \(tag)")
                             }
                         }
                     }
+                    .accessibilityLabel("Popular tags")
                 }
             } header: {
                 Text("Details")
@@ -170,7 +179,9 @@ struct ShareExtensionView: View {
             
             Section {
                 Toggle("Create Archive", isOn: $createArchive)
+                    .accessibilityHint("When enabled, Shiori saves an offline copy of the page")
                 Toggle("Make Public", isOn: $makePublic)
+                    .accessibilityHint("When enabled, this bookmark will be publicly visible")
             }
             
             Section {
@@ -193,9 +204,12 @@ struct ShareExtensionView: View {
     private var savingView: some View {
         VStack(spacing: 16) {
             ProgressView()
+                .accessibilityHidden(true)
             Text("Saving bookmark...")
                 .foregroundColor(.secondary)
         }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Saving bookmark, please wait")
     }
     
     private func successView(bookmarkId: Int) -> some View {
@@ -203,6 +217,7 @@ struct ShareExtensionView: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 60))
                 .foregroundColor(.green)
+                .accessibilityHidden(true)
             
             Text("Bookmark saved!")
                 .font(.headline)
@@ -212,8 +227,10 @@ struct ShareExtensionView: View {
             }
             .buttonStyle(.borderedProminent)
         }
+        .accessibilityElement(children: .contain)
         .onAppear {
             playHapticFeedback(type: .success)
+            UIAccessibility.post(notification: .announcement, argument: "Bookmark saved successfully")
             DispatchQueue.main.asyncAfter(deadline: .now() + AppConstants.Timing.successAutoCloseDelay) {
                 onComplete()
             }
@@ -225,6 +242,7 @@ struct ShareExtensionView: View {
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 60))
                 .foregroundColor(.orange)
+                .accessibilityHidden(true)
             
             Text(error.localizedDescription)
                 .font(.headline)
@@ -247,6 +265,7 @@ struct ShareExtensionView: View {
         .padding()
         .onAppear {
             playHapticFeedback(type: .error)
+            UIAccessibility.post(notification: .announcement, argument: "Error: \(error.localizedDescription)")
         }
     }
     
