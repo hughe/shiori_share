@@ -23,6 +23,34 @@ struct SettingsView: View {
     private let settings = SettingsManager.shared
     
     var body: some View {
+        #if os(macOS)
+        Form {
+            serverConfigurationSection
+            defaultSettingsSection
+            advancedSection
+            actionsSection
+            
+            if !statusMessage.isEmpty {
+                statusSection
+            }
+        }
+        .padding()
+        .frame(minWidth: 400, minHeight: 450)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Cancel") {
+                    dismiss()
+                }
+            }
+            ToolbarItem(placement: .confirmationAction) {
+                Button("Save") {
+                    saveSettings()
+                }
+                .disabled(isSaving || !isFormValid)
+            }
+        }
+        .onAppear(perform: loadSettings)
+        #else
         NavigationView {
             Form {
                 serverConfigurationSection
@@ -35,9 +63,7 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
-            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
-            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -53,7 +79,6 @@ struct SettingsView: View {
             }
             .onAppear(perform: loadSettings)
         }
-        #if os(iOS)
         .navigationViewStyle(.stack)
         #endif
     }
