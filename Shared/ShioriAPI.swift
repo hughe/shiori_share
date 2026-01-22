@@ -19,7 +19,7 @@ struct LoginResponse: Codable {
     }
 }
 
-struct BookmarkRequest: Codable {
+struct BookmarkRequest: Encodable {
     let url: String
     let title: String?
     let excerpt: String?
@@ -27,8 +27,23 @@ struct BookmarkRequest: Codable {
     let createArchive: Bool
     let `public`: Int
     
-    struct TagObject: Codable {
+    struct TagObject: Encodable {
         let name: String
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(url, forKey: .url)
+        try container.encodeIfPresent(title, forKey: .title)
+        try container.encodeIfPresent(excerpt, forKey: .excerpt)
+        try container.encodeIfPresent(tags, forKey: .tags)
+        try container.encode(createArchive, forKey: .createArchive)
+        try container.encode(`public`, forKey: .public)
+    }
+    
+    private enum CodingKeys: String, CodingKey {
+        case url, title, excerpt, tags, createArchive
+        case `public` = "public"
     }
 }
 
@@ -200,23 +215,16 @@ final class ShioriAPI {
         
         let tags = parseKeywords(keywords)
         
-        // Build JSON manually to avoid null values that Shiori may not handle
-        var body: [String: Any] = [
-            "url": url,
-            "createArchive": createArchive,
-            "public": makePublic ? 1 : 0
-        ]
-        if let title = title, !title.isEmpty {
-            body["title"] = title
-        }
-        if let description = description, !description.isEmpty {
-            body["excerpt"] = description
-        }
-        if let tags = tags {
-            body["tags"] = tags.map { ["name": $0.name] }
-        }
+        let bookmarkRequest = BookmarkRequest(
+            url: url,
+            title: title?.isEmpty == false ? title : nil,
+            excerpt: description?.isEmpty == false ? description : nil,
+            tags: tags,
+            createArchive: createArchive,
+            public: makePublic ? 1 : 0
+        )
         
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        request.httpBody = try JSONEncoder().encode(bookmarkRequest)
         
         logger.apiRequest(method: "POST", url: bookmarksURL.absoluteString, headers: ["X-Session-Id": "[REDACTED]"])
         let startTime = Date()
