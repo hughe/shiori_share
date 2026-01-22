@@ -138,7 +138,7 @@ struct ShareExtensionView: View {
             await loadContent()
         }
         #else
-        NavigationView {
+        NavigationStack {
             Group {
                 switch viewState {
                 case .loading:
@@ -165,7 +165,6 @@ struct ShareExtensionView: View {
                 }
             }
         }
-        .navigationViewStyle(.stack)
         .task {
             await loadContent()
         }
@@ -346,6 +345,7 @@ struct ShareExtensionView: View {
                 }
             }
         }
+        .formStyle(.grouped)
         #endif
     }
     
@@ -580,9 +580,6 @@ struct ShareExtensionView: View {
     private func playHapticFeedback(type: UINotificationFeedbackGenerator.FeedbackType) {
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(type)
-    }
-    #else
-    private func playHapticFeedback() {
     }
     #endif
 }

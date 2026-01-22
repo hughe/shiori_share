@@ -12,8 +12,8 @@
 - Keychain Access Group: `$(TeamIdentifierPrefix)net.emberson.shiorishare.shared`
 
 **Target Platforms**:
-- iOS 15.0+
-- iPadOS 15.0+
+- iOS 18.0+
+- iPadOS 18.0+
 - macOS 15.0+ (Sequoia)
 
 **Recommendation**: Start with iOS/iPadOS, then add macOS support.
@@ -833,7 +833,7 @@ Phase 1 ─────┬──→ Phase 2 ──→ Phase 3 ──┬──→
   - Group ID: `group.net.emberson.shiorishare`
 - [ ] [M] Enable Keychain Sharing capability for both targets
   - Access Group: `$(TeamIdentifierPrefix)net.emberson.shiorishare.shared`
-- [ ] [S] Set minimum deployment targets (iOS 15.0, macOS 12.0)
+- [ ] [S] Set minimum deployment targets (iOS 18.0, macOS 15.0)
 - [ ] [S] Set up project structure with Shared folder
 - [ ] [S] Add Privacy Manifest (`PrivacyInfo.xcprivacy`) to both targets
 - [ ] [S] Configure ATS exception for local network (optional, in Info.plist)

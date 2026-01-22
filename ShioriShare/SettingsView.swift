@@ -77,7 +77,7 @@ struct SettingsView: View {
         .onAppear(perform: loadSettings)
         .onExitCommand { dismiss() }
         #else
-        NavigationView {
+        NavigationStack {
             Form {
                 serverConfigurationSection
                 defaultSettingsSection
@@ -88,6 +88,7 @@ struct SettingsView: View {
                     statusSection
                 }
             }
+            .formStyle(.grouped)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -105,7 +106,6 @@ struct SettingsView: View {
             }
             .onAppear(perform: loadSettings)
         }
-        .navigationViewStyle(.stack)
         #endif
     }
     

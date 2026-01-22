@@ -30,7 +30,7 @@ struct InstructionsView: View {
             SettingsView()
         }
         #else
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     headerSection
@@ -58,7 +58,6 @@ struct InstructionsView: View {
                 SettingsView()
             }
         }
-        .navigationViewStyle(.stack)
         #endif
     }
     
