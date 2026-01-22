@@ -29,6 +29,8 @@ final class KeychainHelper {
     
     private let accessGroup = AppConstants.keychainAccessGroup
     private let service = AppConstants.mainAppBundleID
+    private var cachedPassword: String?
+    private var passwordCached = false
     
     private init() {}
     
@@ -124,8 +126,17 @@ final class KeychainHelper {
     // MARK: - Convenience Methods for Shiori Credentials
     
     var password: String? {
-        get { readOptional(forKey: AppConstants.KeychainKey.password) }
+        get {
+            if passwordCached {
+                return cachedPassword
+            }
+            cachedPassword = readOptional(forKey: AppConstants.KeychainKey.password)
+            passwordCached = true
+            return cachedPassword
+        }
         set {
+            cachedPassword = newValue
+            passwordCached = true
             if let value = newValue {
                 try? save(value, forKey: AppConstants.KeychainKey.password)
             } else {
@@ -140,6 +151,8 @@ final class KeychainHelper {
     }
     
     func clearPassword() {
+        cachedPassword = nil
+        passwordCached = true
         try? delete(forKey: AppConstants.KeychainKey.password)
     }
 }
