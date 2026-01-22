@@ -121,55 +121,47 @@ final class ShioriAPI {
     private init() {}
     
     // MARK: - Public API
-    
-    func login() async throws -> String {
-        guard let serverURL = settings.serverURL,
-              let username = settings.username,
-              let password = keychain.password else {
-            throw ShioriAPIError.notConfigured
-        }
-        
+
+    /// Login with explicitly provided credentials (doesn't cache session)
+    func login(serverURL: String, username: String, password: String) async throws -> String {
         guard let baseURL = URL(string: serverURL) else {
             throw ShioriAPIError.invalidURL
         }
-        
+
         let loginURL = baseURL.appendingPathSafely(AppConstants.API.loginPath)
-        
+
         var request = URLRequest(url: loginURL)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.timeoutInterval = AppConstants.Timing.networkTimeout
-        
+
         let loginRequest = LoginRequest(username: username, password: password, remember: true)
         request.httpBody = try JSONEncoder().encode(loginRequest)
-        
+
         logger.apiRequest(method: "POST", url: loginURL.absoluteString)
         let startTime = Date()
-        
+
         do {
-            let (data, response) = try await createSession().data(for: request)
+            let (data, response) = try await createSession(serverURL: serverURL).data(for: request)
             let duration = Date().timeIntervalSince(startTime)
-            
+
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw ShioriAPIError.unknownError(NSError(domain: "ShioriAPI", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response"]))
             }
-            
+
             logger.apiResponse(method: "POST", url: loginURL.absoluteString, statusCode: httpResponse.statusCode, duration: duration)
-            
+
             if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
                 throw ShioriAPIError.invalidCredentials
             }
             try mapStatusCode(httpResponse.statusCode, clearSessionOn401: false)
-            
+
             let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
-            
+
             guard loginResponse.ok, let message = loginResponse.message else {
                 throw ShioriAPIError.invalidCredentials
             }
-            
-            settings.cachedSessionID = message.session
-            settings.sessionTimestamp = Date()
-            
+
             logger.info("Login successful for user: \(username)")
             return message.session
         } catch let error as ShioriAPIError {
@@ -180,6 +172,23 @@ final class ShioriAPI {
         } catch {
             throw mapNetworkError(error)
         }
+    }
+
+    /// Login using stored credentials (caches session)
+    func login() async throws -> String {
+        guard let serverURL = settings.serverURL,
+              let username = settings.username,
+              let password = keychain.password else {
+            throw ShioriAPIError.notConfigured
+        }
+
+        let session = try await login(serverURL: serverURL, username: username, password: password)
+
+        // Cache the session for reuse
+        settings.cachedSessionID = session
+        settings.sessionTimestamp = Date()
+
+        return session
     }
     
     func addBookmark(
@@ -359,9 +368,10 @@ final class ShioriAPI {
         return tags.isEmpty ? nil : tags
     }
     
-    private func createSession() -> URLSession {
+    private func createSession(serverURL: String? = nil) -> URLSession {
         if settings.trustSelfSignedCerts {
-            let host = settings.serverURL.flatMap { URL(string: $0)?.host }
+            let urlString = serverURL ?? settings.serverURL
+            let host = urlString.flatMap { URL(string: $0)?.host }
             let config = URLSessionConfiguration.default
             return URLSession(configuration: config, delegate: TrustSelfSignedCertificatesDelegate(allowedHost: host), delegateQueue: nil)
         }

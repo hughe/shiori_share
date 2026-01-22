@@ -406,108 +406,38 @@ struct SettingsView: View {
     private func testConnection() {
         isTesting = true
         statusMessage = ""
-        
+
         let normalizedURL = serverURL.normalizedServerURL
-        
-        guard let url = URL(string: normalizedURL) else {
-            statusMessage = "Invalid server URL"
-            isError = true
-            isTesting = false
-            return
-        }
-        
-        let loginURL = url.appendingPathSafely(AppConstants.API.loginPath)
-        var request = URLRequest(url: loginURL)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = AppConstants.Timing.networkTimeout
-        
-        let body: [String: Any] = [
-            "username": username,
-            "password": password,
-            "remember": false
-        ]
-        
-        do {
-            request.httpBody = try JSONSerialization.data(withJSONObject: body)
-        } catch {
-            statusMessage = "Failed to create request"
-            isError = true
-            isTesting = false
-            return
-        }
-        
-        let session = createURLSession()
-        
-        DebugLogger.shared.apiRequest(method: "POST", url: loginURL.absoluteString)
-        let startTime = Date()
-        
-        session.dataTask(with: request) { [self] data, response, error in
-            let duration = Date().timeIntervalSince(startTime)
-            
-            DispatchQueue.main.async {
-                isTesting = false
-                
-                if let error = error {
-                    handleConnectionError(error)
-                    return
-                }
-                
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    statusMessage = "Invalid server response"
-                    isError = true
-                    return
-                }
-                
-                DebugLogger.shared.apiResponse(method: "POST", url: loginURL.absoluteString, statusCode: httpResponse.statusCode, duration: duration)
-                
-                switch httpResponse.statusCode {
-                case 200:
+
+        Task {
+            do {
+                _ = try await ShioriAPI.shared.login(
+                    serverURL: normalizedURL,
+                    username: username,
+                    password: password
+                )
+
+                await MainActor.run {
                     statusMessage = "Connection successful!"
                     isError = false
-                case 401, 403:
-                    statusMessage = "Authentication failed. Check username and password."
+                    isTesting = false
+                }
+            } catch let error as ShioriAPIError {
+                await MainActor.run {
+                    statusMessage = error.errorDescription ?? "Unknown error"
                     isError = true
-                case 404:
-                    statusMessage = "Shiori API not found at this URL. Check the server URL."
+                    isTesting = false
+                }
+            } catch {
+                await MainActor.run {
+                    statusMessage = error.localizedDescription
                     isError = true
-                case 500...599:
-                    statusMessage = "Server error. Shiori may be experiencing issues."
-                    isError = true
-                default:
-                    statusMessage = "Unexpected response: \(httpResponse.statusCode)"
-                    isError = true
+                    isTesting = false
                 }
             }
-        }.resume()
+        }
     }
     
-    private func handleConnectionError(_ error: Error) {
-        let nsError = error as NSError
-        
-        switch nsError.code {
-        case NSURLErrorCannotFindHost:
-            statusMessage = "Could not find server. Check the URL is correct."
-        case NSURLErrorCannotConnectToHost:
-            statusMessage = "Server not responding. Is Shiori running?"
-        case NSURLErrorTimedOut:
-            statusMessage = "Connection timed out. Server may be slow or unreachable."
-        case NSURLErrorServerCertificateUntrusted, NSURLErrorSecureConnectionFailed:
-            statusMessage = "Certificate error. Enable 'Trust Self-Signed Certs' if using self-signed certificate."
-        default:
-            statusMessage = "Connection failed: \(error.localizedDescription)"
-        }
-        isError = true
-    }
-    
-    private func createURLSession() -> URLSession {
-        if trustSelfSignedCerts {
-            let host = URL(string: serverURL.normalizedServerURL)?.host
-            let config = URLSessionConfiguration.default
-            return URLSession(configuration: config, delegate: TrustSelfSignedCertificatesDelegate(allowedHost: host), delegateQueue: nil)
-        }
-        return URLSession.shared
-    }
 }
 
 #Preview {
