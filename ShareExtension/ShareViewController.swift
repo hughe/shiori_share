@@ -1,6 +1,11 @@
+#if os(iOS)
 import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 import SwiftUI
 
+#if os(iOS)
 class ShareViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,6 +34,22 @@ class ShareViewController: UIViewController {
         hostingController.didMove(toParent: self)
     }
 }
+#elseif os(macOS)
+class ShareViewController: NSViewController {
+    override func loadView() {
+        let hostingView = NSHostingView(rootView: ShareExtensionView(
+            extensionContext: extensionContext,
+            onCancel: { [weak self] in
+                self?.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
+            },
+            onComplete: { [weak self] in
+                self?.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
+            }
+        ))
+        self.view = hostingView
+    }
+}
+#endif
 
 // MARK: - View States
 
@@ -94,14 +115,18 @@ struct ShareExtensionView: View {
                 }
             }
             .navigationTitle("Save to Shiori")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onCancel)
                 }
             }
         }
+        #if os(iOS)
         .navigationViewStyle(.stack)
+        #endif
         .task {
             await loadContent()
         }
@@ -140,7 +165,9 @@ struct ShareExtensionView: View {
                     .accessibilityHint("Optional description or notes for the bookmark")
                 
                 TextField("Keywords (comma-separated)", text: $keywords)
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                     .autocorrectionDisabled()
                     .accessibilityHint("Enter tags separated by commas")
                 
@@ -229,8 +256,10 @@ struct ShareExtensionView: View {
         }
         .accessibilityElement(children: .contain)
         .onAppear {
+            #if os(iOS)
             playHapticFeedback(type: .success)
             UIAccessibility.post(notification: .announcement, argument: "Bookmark saved successfully")
+            #endif
             DispatchQueue.main.asyncAfter(deadline: .now() + AppConstants.Timing.successAutoCloseDelay) {
                 onComplete()
             }
@@ -264,8 +293,10 @@ struct ShareExtensionView: View {
         }
         .padding()
         .onAppear {
+            #if os(iOS)
             playHapticFeedback(type: .error)
             UIAccessibility.post(notification: .announcement, argument: "Error: \(error.localizedDescription)")
+            #endif
         }
     }
     
@@ -345,6 +376,7 @@ struct ShareExtensionView: View {
         viewState = .saving
         
         do {
+            #if os(iOS)
             let response = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<BookmarkResponse, Error>) in
                 ProcessInfo.processInfo.performExpiringActivity(withReason: "Saving bookmark to Shiori") { expired in
                     if expired {
@@ -369,6 +401,16 @@ struct ShareExtensionView: View {
                     }
                 }
             }
+            #else
+            let response = try await ShioriAPI.shared.addBookmark(
+                url: url.absoluteString,
+                title: self.title.isEmpty ? nil : self.title,
+                description: self.description.isEmpty ? nil : self.description,
+                keywords: self.keywords.isEmpty ? nil : self.keywords,
+                createArchive: self.createArchive,
+                makePublic: self.makePublic
+            )
+            #endif
             
             viewState = .success(bookmarkId: response.id)
         } catch let error as ShioriAPIError {
@@ -396,10 +438,13 @@ struct ShareExtensionView: View {
         keywords = parts.joined(separator: ", ") + ", "
     }
     
+    #if os(iOS)
     private func playHapticFeedback(type: UINotificationFeedbackGenerator.FeedbackType) {
-        #if os(iOS)
         let generator = UINotificationFeedbackGenerator()
         generator.notificationOccurred(type)
-        #endif
     }
+    #else
+    private func playHapticFeedback() {
+    }
+    #endif
 }

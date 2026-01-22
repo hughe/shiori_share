@@ -19,6 +19,7 @@ struct InstructionsView: View {
             }
             .navigationTitle("Shiori Share")
             .toolbar {
+                #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showingSettings = true
@@ -27,12 +28,24 @@ struct InstructionsView: View {
                             .accessibilityLabel("Settings")
                     }
                 }
+                #else
+                ToolbarItem(placement: .automatic) {
+                    Button {
+                        showingSettings = true
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .accessibilityLabel("Settings")
+                    }
+                }
+                #endif
             }
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
         }
+        #if os(iOS)
         .navigationViewStyle(.stack)
+        #endif
     }
     
     private var headerSection: some View {

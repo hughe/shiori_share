@@ -35,7 +35,9 @@ struct SettingsView: View {
                 }
             }
             .navigationTitle("Settings")
+            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
+            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -51,7 +53,9 @@ struct SettingsView: View {
             }
             .onAppear(perform: loadSettings)
         }
+        #if os(iOS)
         .navigationViewStyle(.stack)
+        #endif
     }
     
     // MARK: - Sections
@@ -59,27 +63,35 @@ struct SettingsView: View {
     private var serverConfigurationSection: some View {
         Section {
             TextField("Server URL", text: $serverURL)
+                #if os(iOS)
                 .textContentType(.URL)
                 .keyboardType(.URL)
                 .autocapitalization(.none)
+                #endif
                 .disableAutocorrection(true)
                 .accessibilityHint("Enter your Shiori server URL, for example https://shiori.example.com")
             
             TextField("Username", text: $username)
+                #if os(iOS)
                 .textContentType(.username)
                 .autocapitalization(.none)
+                #endif
                 .disableAutocorrection(true)
                 .accessibilityHint("Enter your Shiori username")
             
             HStack {
                 if showPassword {
                     TextField("Password", text: $password)
+                        #if os(iOS)
                         .textContentType(.password)
                         .autocapitalization(.none)
+                        #endif
                         .disableAutocorrection(true)
                 } else {
                     SecureField("Password", text: $password)
+                        #if os(iOS)
                         .textContentType(.password)
+                        #endif
                 }
                 
                 Button {
