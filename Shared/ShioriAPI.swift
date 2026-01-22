@@ -368,7 +368,7 @@ final class ShioriAPI {
         return URLSession.shared
     }
     
-    private func mapNetworkError(_ error: Error) -> ShioriAPIError {
+    internal func mapNetworkError(_ error: Error) -> ShioriAPIError {
         if let urlError = error as? URLError {
             switch urlError.code {
             case .serverCertificateUntrusted,
