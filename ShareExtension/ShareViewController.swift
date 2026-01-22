@@ -481,7 +481,8 @@ struct ShareExtensionView: View {
     // MARK: - Actions
     
     private func loadContent() async {
-        guard keychain.hasCredentials else {
+        // Check non-secret settings first (no keychain access)
+        guard settings.serverURL != nil, settings.username != nil else {
             viewState = .notConfigured
             return
         }
@@ -489,11 +490,7 @@ struct ShareExtensionView: View {
         createArchive = settings.defaultCreateArchive
         makePublic = settings.defaultMakePublic
         
-        // Refresh popular tags from server in background
-        Task {
-            await ShioriAPI.shared.refreshPopularTags()
-        }
-        
+        // Extract URL first - this paints the form before keychain access
         do {
             let content = try await URLExtractor.extract(from: extensionContext)
             extractedURL = content.url
@@ -502,6 +499,18 @@ struct ShareExtensionView: View {
         } catch {
             DebugLogger.shared.error(error, context: "URL extraction failed")
             viewState = .noURL
+            return
+        }
+        
+        // Now check password (triggers keychain access after form is displayed)
+        guard keychain.password != nil else {
+            viewState = .notConfigured
+            return
+        }
+        
+        // Refresh popular tags from server in background
+        Task {
+            await ShioriAPI.shared.refreshPopularTags()
         }
     }
     
