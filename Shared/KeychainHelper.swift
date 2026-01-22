@@ -138,9 +138,17 @@ final class KeychainHelper {
             cachedPassword = newValue
             passwordCached = true
             if let value = newValue {
-                try? save(value, forKey: AppConstants.KeychainKey.password)
+                do {
+                    try save(value, forKey: AppConstants.KeychainKey.password)
+                } catch {
+                    DebugLogger.shared.error(error, context: "Failed to save password to Keychain")
+                }
             } else {
-                try? delete(forKey: AppConstants.KeychainKey.password)
+                do {
+                    try delete(forKey: AppConstants.KeychainKey.password)
+                } catch {
+                    DebugLogger.shared.error(error, context: "Failed to delete password from Keychain")
+                }
             }
         }
     }
@@ -153,6 +161,10 @@ final class KeychainHelper {
     func clearPassword() {
         cachedPassword = nil
         passwordCached = true
-        try? delete(forKey: AppConstants.KeychainKey.password)
+        do {
+            try delete(forKey: AppConstants.KeychainKey.password)
+        } catch {
+            DebugLogger.shared.error(error, context: "Failed to clear password from Keychain")
+        }
     }
 }
