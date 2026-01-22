@@ -490,23 +490,25 @@ struct ShareExtensionView: View {
         createArchive = settings.defaultCreateArchive
         makePublic = settings.defaultMakePublic
         
-        // Extract URL first - this paints the form before keychain access
+        // Extract URL while still showing loading view
         do {
             let content = try await URLExtractor.extract(from: extensionContext)
             extractedURL = content.url
             title = content.title ?? ""
-            viewState = .form
         } catch {
             DebugLogger.shared.error(error, context: "URL extraction failed")
             viewState = .noURL
             return
         }
         
-        // Now check password (triggers keychain access after form is displayed)
+        // Check password (triggers keychain dialog while loading view is shown)
         guard keychain.password != nil else {
             viewState = .notConfigured
             return
         }
+        
+        // Now show the form after all checks pass
+        viewState = .form
         
         // Refresh popular tags from server in background
         Task {
