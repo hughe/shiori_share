@@ -36,6 +36,7 @@
 		A3000001 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = P2000001 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A4000001 /* StringURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000001 /* StringURLTests.swift */; };
 		A4000002 /* ParseKeywordsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000002 /* ParseKeywordsTests.swift */; };
+		A4000003 /* ShioriAPIErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000003 /* ShioriAPIErrorTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,6 +89,7 @@
 		B1000020 /* InstructionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionsView.swift; sourceTree = "<group>"; };
 		B4000001 /* StringURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringURLTests.swift; sourceTree = "<group>"; };
 		B4000002 /* ParseKeywordsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParseKeywordsTests.swift; sourceTree = "<group>"; };
+		B4000003 /* ShioriAPIErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShioriAPIErrorTests.swift; sourceTree = "<group>"; };
 		P4000001 /* ShioriShareTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShioriShareTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B2000001 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
@@ -190,6 +192,7 @@
 			isa = PBXGroup;
 			children = (
 				B4000002 /* ParseKeywordsTests.swift */,
+				B4000003 /* ShioriAPIErrorTests.swift */,
 				B4000001 /* StringURLTests.swift */,
 			);
 			path = ShioriShareTests;
@@ -357,6 +360,7 @@
 			files = (
 				A4000001 /* StringURLTests.swift in Sources */,
 				A4000002 /* ParseKeywordsTests.swift in Sources */,
+				A4000003 /* ShioriAPIErrorTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
