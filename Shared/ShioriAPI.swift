@@ -108,8 +108,8 @@ final class ShioriAPI {
     // MARK: - Public API
     
     func login() async throws -> String {
-        guard let serverURL = keychain.serverURL,
-              let username = keychain.username,
+        guard let serverURL = settings.serverURL,
+              let username = settings.username,
               let password = keychain.password else {
             throw ShioriAPIError.notConfigured
         }
@@ -185,7 +185,7 @@ final class ShioriAPI {
     ) async throws -> BookmarkResponse {
         let sessionID = try await getValidSession()
         
-        guard let serverURL = keychain.serverURL,
+        guard let serverURL = settings.serverURL,
               let baseURL = URL(string: serverURL) else {
             throw ShioriAPIError.notConfigured
         }
@@ -265,7 +265,7 @@ final class ShioriAPI {
     func fetchTags() async throws -> [TagResponse] {
         let sessionID = try await getValidSession()
         
-        guard let serverURL = keychain.serverURL,
+        guard let serverURL = settings.serverURL,
               let baseURL = URL(string: serverURL) else {
             throw ShioriAPIError.notConfigured
         }

@@ -123,28 +123,6 @@ final class KeychainHelper {
     
     // MARK: - Convenience Methods for Shiori Credentials
     
-    var serverURL: String? {
-        get { readOptional(forKey: AppConstants.KeychainKey.serverURL) }
-        set {
-            if let value = newValue {
-                try? save(value, forKey: AppConstants.KeychainKey.serverURL)
-            } else {
-                try? delete(forKey: AppConstants.KeychainKey.serverURL)
-            }
-        }
-    }
-    
-    var username: String? {
-        get { readOptional(forKey: AppConstants.KeychainKey.username) }
-        set {
-            if let value = newValue {
-                try? save(value, forKey: AppConstants.KeychainKey.username)
-            } else {
-                try? delete(forKey: AppConstants.KeychainKey.username)
-            }
-        }
-    }
-    
     var password: String? {
         get { readOptional(forKey: AppConstants.KeychainKey.password) }
         set {
@@ -157,12 +135,11 @@ final class KeychainHelper {
     }
     
     var hasCredentials: Bool {
-        serverURL != nil && username != nil && password != nil
+        let settings = SettingsManager.shared
+        return settings.serverURL != nil && settings.username != nil && password != nil
     }
     
-    func clearAllCredentials() {
-        try? delete(forKey: AppConstants.KeychainKey.serverURL)
-        try? delete(forKey: AppConstants.KeychainKey.username)
+    func clearPassword() {
         try? delete(forKey: AppConstants.KeychainKey.password)
     }
 }

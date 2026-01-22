@@ -9,6 +9,18 @@ final class SettingsManager {
         defaults = UserDefaults(suiteName: AppConstants.appGroupID) ?? .standard
     }
     
+    // MARK: - Server Credentials (non-secret)
+    
+    var serverURL: String? {
+        get { defaults.string(forKey: AppConstants.DefaultsKey.serverURL) }
+        set { defaults.set(newValue, forKey: AppConstants.DefaultsKey.serverURL) }
+    }
+    
+    var username: String? {
+        get { defaults.string(forKey: AppConstants.DefaultsKey.username) }
+        set { defaults.set(newValue, forKey: AppConstants.DefaultsKey.username) }
+    }
+    
     // MARK: - Bookmark Defaults
     
     var defaultCreateArchive: Bool {

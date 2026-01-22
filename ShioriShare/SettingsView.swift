@@ -372,8 +372,8 @@ struct SettingsView: View {
     // MARK: - Actions
     
     private func loadSettings() {
-        serverURL = keychain.serverURL ?? ""
-        username = keychain.username ?? ""
+        serverURL = settings.serverURL ?? ""
+        username = settings.username ?? ""
         password = keychain.password ?? ""
         
         createArchive = settings.defaultCreateArchive
@@ -388,8 +388,8 @@ struct SettingsView: View {
         
         let normalizedURL = serverURL.normalizedServerURL
         
-        keychain.serverURL = normalizedURL
-        keychain.username = username
+        settings.serverURL = normalizedURL
+        settings.username = username
         keychain.password = password
         
         settings.defaultCreateArchive = createArchive

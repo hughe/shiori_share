@@ -10,15 +10,15 @@ enum AppConstants {
     static let appGroupID = "group.net.emberson.shiorishare"
     static let keychainAccessGroup = "net.emberson.shiorishare.shared"
     
-    // MARK: - Keychain Keys
+    // MARK: - Keychain Keys (password only - other settings use UserDefaults)
     enum KeychainKey {
-        static let serverURL = "shiori.serverURL"
-        static let username = "shiori.username"
         static let password = "shiori.password"
     }
     
     // MARK: - UserDefaults Keys
     enum DefaultsKey {
+        static let serverURL = "serverURL"
+        static let username = "username"
         static let defaultCreateArchive = "defaultCreateArchive"
         static let defaultMakePublic = "defaultMakePublic"
         static let recentTags = "recentTags"
