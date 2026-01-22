@@ -2,11 +2,16 @@ import Foundation
 
 final class SettingsManager {
     static let shared = SettingsManager()
-    
+
     private let defaults: UserDefaults
-    
+
     private init() {
         defaults = UserDefaults(suiteName: AppConstants.appGroupID) ?? .standard
+    }
+
+    // Internal initializer for testing
+    internal init(defaults: UserDefaults) {
+        self.defaults = defaults
     }
     
     // MARK: - Server Credentials (non-secret)
