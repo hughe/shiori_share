@@ -229,6 +229,11 @@ struct ShareExtensionView: View {
                             .textFieldStyle(.roundedBorder)
                             .focused($focusedField, equals: .tags)
                             .onSubmit { focusedField = .createArchive }
+                            .onChange(of: focusedField) { _, newValue in
+                                if newValue == .tags {
+                                    loadTagsIfNeeded()
+                                }
+                            }
                         
                         if !tagSuggestions.isEmpty {
                             SingleRowFlowLayout(spacing: 6) {
@@ -255,6 +260,7 @@ struct ShareExtensionView: View {
                 // Options
                 VStack(alignment: .leading, spacing: 8) {
                     Toggle("Create Archive", isOn: $createArchive)
+                        .focusable()
                         .focused($focusedField, equals: .createArchive)
                         .onKeyPress(.space) {
                             createArchive.toggle()
@@ -265,6 +271,7 @@ struct ShareExtensionView: View {
                             return .handled
                         }
                     Toggle("Make Public", isOn: $makePublic)
+                        .focusable()
                         .focused($focusedField, equals: .makePublic)
                         .onKeyPress(.space) {
                             makePublic.toggle()
@@ -287,11 +294,22 @@ struct ShareExtensionView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
-                    .keyboardShortcut(.return, modifiers: [])
+                    .keyboardShortcut(.defaultAction)
                 }
             }
             .padding()
+            .onKeyPress(.return) {
+                if focusedField != .description {
+                    Task { await saveBookmark() }
+                    return .handled
+                }
+                return .ignored
+            }
+            .onAppear {
+                focusedField = .title
+            }
         }
+
         #else
         Form {
             Section {
@@ -530,16 +548,12 @@ struct ShareExtensionView: View {
             return
         }
         
-        // Check password (triggers keychain dialog while loading view is shown)
-        guard keychain.password != nil else {
-            viewState = .notConfigured
-            return
-        }
-        
-        // Now show the form after all checks pass
+        // Show the form - password will be checked when saving
         viewState = .form
-        
-        // Refresh popular tags from server in background
+    }
+    
+    private func loadTagsIfNeeded() {
+        guard settings.recentTags.isEmpty else { return }
         Task {
             await ShioriAPI.shared.refreshPopularTags()
         }
