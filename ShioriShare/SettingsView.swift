@@ -29,10 +29,8 @@ struct SettingsView: View {
             defaultSettingsSection
             advancedSection
             actionsSection
-            
-            if !statusMessage.isEmpty {
-                statusSection
-            }
+            statusSection
+                .opacity(statusMessage.isEmpty ? 0 : 1)
         }
         .padding()
         .frame(width: 400)
