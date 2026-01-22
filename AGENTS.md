@@ -10,6 +10,18 @@ make open         # Open project in Xcode
 make clean        # Clean build artifacts
 ```
 
+## Testing
+
+Unit tests are in `ShioriShareTests/`. Run tests with:
+
+```bash
+xcodebuild test -project ShioriShare.xcodeproj -scheme ShioriShare -destination 'platform=iOS Simulator,name=iPhone 17'
+```
+
+Current test coverage:
+- `StringURLTests` - Tests for String+URL extensions (URL validation, normalization, extraction)
+- `URLExtensionTests` - Tests for URL extensions (isHTTP, appendingPathSafely)
+
 ## Project Structure
 
 - `ShioriShare/` - Main app (Instructions + Settings screens)
