@@ -344,9 +344,10 @@ struct SettingsView: View {
         HStack {
             Image(systemName: isError ? "exclamationmark.triangle" : "checkmark.circle")
                 .foregroundColor(isError ? .orange : .green)
-            Text(statusMessage)
+            Text(statusMessage.isEmpty ? " " : statusMessage)
                 .font(.callout)
         }
+        .frame(minHeight: 20)
         #else
         Section {
             HStack {

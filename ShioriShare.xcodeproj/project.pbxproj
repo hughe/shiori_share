@@ -20,6 +20,7 @@
 		A100000B /* InstructionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000020 /* InstructionsView.swift */; };
 		A100000C /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000021 /* SettingsView.swift */; };
 		A100000D /* ShioriAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016 /* ShioriAPI.swift */; };
+		A100000E /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000017 /* FlowLayout.swift */; };
 		A2000001 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000001 /* ShareViewController.swift */; };
 		A2000002 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000010 /* AppConstants.swift */; };
 		A2000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B2000003 /* PrivacyInfo.xcprivacy */; };
@@ -29,6 +30,7 @@
 		A2000007 /* URLExtractor.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000014 /* URLExtractor.swift */; };
 		A2000008 /* DebugLogger.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000015 /* DebugLogger.swift */; };
 		A2000009 /* ShioriAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016 /* ShioriAPI.swift */; };
+		A200000A /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000017 /* FlowLayout.swift */; };
 		A3000001 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = P2000001 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -70,6 +72,7 @@
 		B1000014 /* URLExtractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = URLExtractor.swift; sourceTree = "<group>"; };
 		B1000015 /* DebugLogger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLogger.swift; sourceTree = "<group>"; };
 		B1000016 /* ShioriAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShioriAPI.swift; sourceTree = "<group>"; };
+		B1000017 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		B1000020 /* InstructionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionsView.swift; sourceTree = "<group>"; };
 		B1000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B2000001 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
@@ -138,12 +141,13 @@
 			isa = PBXGroup;
 			children = (
 				B1000010 /* AppConstants.swift */,
+				B1000015 /* DebugLogger.swift */,
+				B1000017 /* FlowLayout.swift */,
 				B1000011 /* KeychainHelper.swift */,
 				B1000012 /* SettingsManager.swift */,
+				B1000016 /* ShioriAPI.swift */,
 				B1000013 /* String+URL.swift */,
 				B1000014 /* URLExtractor.swift */,
-				B1000015 /* DebugLogger.swift */,
-				B1000016 /* ShioriAPI.swift */,
 			);
 			path = Shared;
 			sourceTree = "<group>";
@@ -269,6 +273,7 @@
 				A1000009 /* URLExtractor.swift in Sources */,
 				A100000A /* DebugLogger.swift in Sources */,
 				A100000D /* ShioriAPI.swift in Sources */,
+				A100000E /* FlowLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,6 +289,7 @@
 				A2000007 /* URLExtractor.swift in Sources */,
 				A2000008 /* DebugLogger.swift in Sources */,
 				A2000009 /* ShioriAPI.swift in Sources */,
+				A200000A /* FlowLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

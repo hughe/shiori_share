@@ -219,7 +219,7 @@ struct ShareExtensionView: View {
                             .textFieldStyle(.roundedBorder)
                         
                         if !tagSuggestions.isEmpty {
-                            HStack {
+                            FlowLayout(spacing: 6) {
                                 ForEach(tagSuggestions.prefix(5), id: \.self) { tag in
                                     Button(tag) { completeTag(tag) }
                                         .buttonStyle(.bordered)
@@ -227,7 +227,7 @@ struct ShareExtensionView: View {
                                 }
                             }
                         } else if !displayedTags.isEmpty {
-                            HStack {
+                            FlowLayout(spacing: 6) {
                                 ForEach(displayedTags, id: \.self) { tag in
                                     Button(tag) { addTag(tag) }
                                         .buttonStyle(.bordered)
