@@ -85,6 +85,13 @@ struct ShareExtensionView: View {
     @State private var makePublic: Bool = false
     @State private var savedBookmarkId: Int?
     
+    #if os(macOS)
+    private enum Field: Int, CaseIterable {
+        case title, description, tags, createArchive, makePublic
+    }
+    @FocusState private var focusedField: Field?
+    #endif
+    
     private let settings = SettingsManager.shared
     private let keychain = KeychainHelper.shared
     
@@ -103,14 +110,10 @@ struct ShareExtensionView: View {
     var body: some View {
         #if os(macOS)
         VStack(spacing: 0) {
-            HStack {
-                Text("Save to Shiori")
-                    .font(.headline)
-                Spacer()
-                Button("Cancel", action: onCancel)
-                    .keyboardShortcut(.cancelAction)
-            }
-            .padding()
+            Text("Save to Shiori")
+                .font(.headline)
+                .frame(maxWidth: .infinity)
+                .padding()
             
             Divider()
             
@@ -207,6 +210,8 @@ struct ShareExtensionView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         TextField("Title", text: $title)
                             .textFieldStyle(.roundedBorder)
+                            .focused($focusedField, equals: .title)
+                            .onSubmit { focusedField = .description }
                         
                         Text("Description")
                             .font(.subheadline)
@@ -214,9 +219,16 @@ struct ShareExtensionView: View {
                         TextEditor(text: $description)
                             .frame(height: 60)
                             .border(Color.secondary.opacity(0.3), width: 1)
+                            .focused($focusedField, equals: .description)
+                            .onKeyPress(.tab) {
+                                focusedField = .tags
+                                return .handled
+                            }
                         
                         TextField("Tags (comma-separated)", text: $keywords)
                             .textFieldStyle(.roundedBorder)
+                            .focused($focusedField, equals: .tags)
+                            .onSubmit { focusedField = .createArchive }
                         
                         if !tagSuggestions.isEmpty {
                             SingleRowFlowLayout(spacing: 6) {
@@ -243,13 +255,29 @@ struct ShareExtensionView: View {
                 // Options
                 VStack(alignment: .leading, spacing: 8) {
                     Toggle("Create Archive", isOn: $createArchive)
+                        .focused($focusedField, equals: .createArchive)
+                        .onKeyPress(.space) {
+                            createArchive.toggle()
+                            return .handled
+                        }
+                        .onKeyPress(.tab) {
+                            focusedField = .makePublic
+                            return .handled
+                        }
                     Toggle("Make Public", isOn: $makePublic)
+                        .focused($focusedField, equals: .makePublic)
+                        .onKeyPress(.space) {
+                            makePublic.toggle()
+                            return .handled
+                        }
                 }
                 
                 Divider()
                 
-                // Save Button
+                // Buttons
                 HStack {
+                    Button("Cancel", action: onCancel)
+                        .keyboardShortcut(.cancelAction)
                     Spacer()
                     Button {
                         Task { await saveBookmark() }
@@ -259,6 +287,7 @@ struct ShareExtensionView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.large)
+                    .keyboardShortcut(.return, modifiers: [])
                 }
             }
             .padding()
