@@ -21,6 +21,7 @@ xcodebuild test -project ShioriShare.xcodeproj -scheme ShioriShare -destination 
 Current test coverage:
 - `StringURLTests` - Tests for String+URL extensions (URL validation, normalization, extraction)
 - `URLExtensionTests` - Tests for URL extensions (isHTTP, appendingPathSafely)
+- `ParseKeywordsTests` - Tests for ShioriAPI.parseKeywords (tag parsing)
 
 ## Project Structure
 

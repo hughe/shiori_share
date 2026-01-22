@@ -344,7 +344,7 @@ final class ShioriAPI {
         }
     }
     
-    private func parseKeywords(_ keywords: String?) -> [BookmarkRequest.TagObject]? {
+    func parseKeywords(_ keywords: String?) -> [BookmarkRequest.TagObject]? {
         guard let keywords = keywords?.trimmingCharacters(in: .whitespacesAndNewlines),
               !keywords.isEmpty else {
             return nil
