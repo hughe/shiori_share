@@ -24,7 +24,7 @@ struct SettingsView: View {
     
     var body: some View {
         #if os(macOS)
-        Form {
+        VStack(alignment: .leading, spacing: 20) {
             serverConfigurationSection
             defaultSettingsSection
             advancedSection
@@ -35,7 +35,7 @@ struct SettingsView: View {
             }
         }
         .padding()
-        .frame(minWidth: 400, minHeight: 450)
+        .frame(width: 400)
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") {
