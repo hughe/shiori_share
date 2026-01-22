@@ -219,15 +219,15 @@ struct ShareExtensionView: View {
                             .textFieldStyle(.roundedBorder)
                         
                         if !tagSuggestions.isEmpty {
-                            FlowLayout(spacing: 6) {
-                                ForEach(tagSuggestions.prefix(5), id: \.self) { tag in
+                            SingleRowFlowLayout(spacing: 6) {
+                                ForEach(tagSuggestions.prefix(10), id: \.self) { tag in
                                     Button(tag) { completeTag(tag) }
                                         .buttonStyle(.bordered)
                                         .controlSize(.small)
                                 }
                             }
                         } else if !displayedTags.isEmpty {
-                            FlowLayout(spacing: 6) {
+                            SingleRowFlowLayout(spacing: 6) {
                                 ForEach(displayedTags, id: \.self) { tag in
                                     Button(tag) { addTag(tag) }
                                         .buttonStyle(.bordered)
