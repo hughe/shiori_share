@@ -12,12 +12,10 @@ struct InstructionsView: View {
                 howToUseSection
                 Divider()
                 tipSection
-                Divider()
-                aboutSection
             }
             .padding()
         }
-        .frame(minWidth: 400, minHeight: 400)
+        .frame(minWidth: 400, minHeight: 300)
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button {

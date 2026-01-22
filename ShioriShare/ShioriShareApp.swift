@@ -17,6 +17,36 @@ struct ShioriShareApp: App {
         .commands {
             CommandGroup(replacing: .newItem) { }
             CommandGroup(replacing: .toolbar) { }
+            CommandGroup(replacing: .appInfo) {
+                Button("About Shiori Share") {
+                    let paragraphStyle = NSMutableParagraphStyle()
+                    paragraphStyle.alignment = .center
+                    
+                    let credits = NSMutableAttributedString(
+                        string: "Shiori is a simple, self-hosted, bookmark manager built with Go.\n\n",
+                        attributes: [
+                            .font: NSFont.systemFont(ofSize: 11),
+                            .paragraphStyle: paragraphStyle
+                        ]
+                    )
+                    
+                    let urlString = "https://github.com/go-shiori/shiori"
+                    let link = NSAttributedString(
+                        string: urlString,
+                        attributes: [
+                            .font: NSFont.systemFont(ofSize: 11),
+                            .paragraphStyle: paragraphStyle,
+                            .link: URL(string: urlString)!
+                        ]
+                    )
+                    credits.append(link)
+                    
+                    NSApplication.shared.orderFrontStandardAboutPanel(options: [
+                        .applicationName: "Shiori Share",
+                        .credits: credits
+                    ])
+                }
+            }
         }
         #endif
     }
