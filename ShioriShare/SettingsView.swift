@@ -90,6 +90,8 @@ struct SettingsView: View {
                 .textContentType(.URL)
                 .keyboardType(.URL)
                 .autocapitalization(.none)
+                #elseif os(macOS)
+                .textFieldStyle(.roundedBorder)
                 #endif
                 .disableAutocorrection(true)
                 .accessibilityHint("Enter your Shiori server URL, for example https://shiori.example.com")
@@ -98,6 +100,8 @@ struct SettingsView: View {
                 #if os(iOS)
                 .textContentType(.username)
                 .autocapitalization(.none)
+                #elseif os(macOS)
+                .textFieldStyle(.roundedBorder)
                 #endif
                 .disableAutocorrection(true)
                 .accessibilityHint("Enter your Shiori username")
@@ -108,12 +112,16 @@ struct SettingsView: View {
                         #if os(iOS)
                         .textContentType(.password)
                         .autocapitalization(.none)
+                        #elseif os(macOS)
+                        .textFieldStyle(.roundedBorder)
                         #endif
                         .disableAutocorrection(true)
                 } else {
                     SecureField("Password", text: $password)
                         #if os(iOS)
                         .textContentType(.password)
+                        #elseif os(macOS)
+                        .textFieldStyle(.roundedBorder)
                         #endif
                 }
                 
@@ -180,6 +188,9 @@ struct SettingsView: View {
                     Text("Test Connection")
                 }
             }
+            #if os(macOS)
+            .buttonStyle(.bordered)
+            #endif
             .disabled(isTesting || !isFormValid)
         }
     }
