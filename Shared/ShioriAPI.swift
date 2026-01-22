@@ -156,30 +156,22 @@ final class ShioriAPI {
             
             logger.apiResponse(method: "POST", url: loginURL.absoluteString, statusCode: httpResponse.statusCode, duration: duration)
             
-            switch httpResponse.statusCode {
-            case 200:
-                let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
-                
-                guard loginResponse.ok, let message = loginResponse.message else {
-                    throw ShioriAPIError.invalidCredentials
-                }
-                
-                // Use session ID for legacy API (not JWT token)
-                settings.cachedSessionID = message.session
-                settings.sessionTimestamp = Date()
-                
-                logger.info("Login successful for user: \(username)")
-                return message.session
-                
-            case 401, 403:
+            if httpResponse.statusCode == 401 || httpResponse.statusCode == 403 {
                 throw ShioriAPIError.invalidCredentials
-            case 404:
-                throw ShioriAPIError.notFound
-            case 500...599:
-                throw ShioriAPIError.serverError(httpResponse.statusCode)
-            default:
-                throw ShioriAPIError.serverError(httpResponse.statusCode)
             }
+            try mapStatusCode(httpResponse.statusCode, clearSessionOn401: false)
+            
+            let loginResponse = try JSONDecoder().decode(LoginResponse.self, from: data)
+            
+            guard loginResponse.ok, let message = loginResponse.message else {
+                throw ShioriAPIError.invalidCredentials
+            }
+            
+            settings.cachedSessionID = message.session
+            settings.sessionTimestamp = Date()
+            
+            logger.info("Login successful for user: \(username)")
+            return message.session
         } catch let error as ShioriAPIError {
             throw error
         } catch let error as DecodingError {
@@ -239,27 +231,16 @@ final class ShioriAPI {
             
             logger.apiResponse(method: "POST", url: bookmarksURL.absoluteString, statusCode: httpResponse.statusCode, duration: duration)
             
-            switch httpResponse.statusCode {
-            case 200, 201:
-                let bookmarkResponse = try JSONDecoder().decode(BookmarkResponse.self, from: data)
-                
-                if let tags = tags {
-                    settings.addRecentTags(tags.map { $0.name })
-                }
-                
-                logger.info("Bookmark saved: id=\(bookmarkResponse.id)")
-                return bookmarkResponse
-                
-            case 401:
-                settings.clearSession()
-                throw ShioriAPIError.unauthorized
-            case 404:
-                throw ShioriAPIError.notFound
-            case 500...599:
-                throw ShioriAPIError.serverError(httpResponse.statusCode)
-            default:
-                throw ShioriAPIError.serverError(httpResponse.statusCode)
+            try mapStatusCode(httpResponse.statusCode)
+            
+            let bookmarkResponse = try JSONDecoder().decode(BookmarkResponse.self, from: data)
+            
+            if let tags = tags {
+                settings.addRecentTags(tags.map { $0.name })
             }
+            
+            logger.info("Bookmark saved: id=\(bookmarkResponse.id)")
+            return bookmarkResponse
         } catch let error as ShioriAPIError {
             throw error
         } catch let error as DecodingError {
@@ -298,20 +279,11 @@ final class ShioriAPI {
             
             logger.apiResponse(method: "GET", url: tagsURL.absoluteString, statusCode: httpResponse.statusCode, duration: duration)
             
-            switch httpResponse.statusCode {
-            case 200:
-                let tags = try JSONDecoder().decode([TagResponse].self, from: data)
-                logger.info("Fetched \(tags.count) tags from server")
-                return tags
-                
-            case 401:
-                settings.clearSession()
-                throw ShioriAPIError.unauthorized
-            case 404:
-                throw ShioriAPIError.notFound
-            default:
-                throw ShioriAPIError.serverError(httpResponse.statusCode)
-            }
+            try mapStatusCode(httpResponse.statusCode)
+            
+            let tags = try JSONDecoder().decode([TagResponse].self, from: data)
+            logger.info("Fetched \(tags.count) tags from server")
+            return tags
         } catch let error as ShioriAPIError {
             throw error
         } catch let error as DecodingError {
@@ -351,6 +323,26 @@ final class ShioriAPI {
     }
     
     // MARK: - Helper Methods
+    
+    private func mapStatusCode(_ statusCode: Int, clearSessionOn401: Bool = true) throws {
+        switch statusCode {
+        case 200, 201:
+            return
+        case 401:
+            if clearSessionOn401 {
+                settings.clearSession()
+            }
+            throw ShioriAPIError.unauthorized
+        case 403:
+            throw ShioriAPIError.invalidCredentials
+        case 404:
+            throw ShioriAPIError.notFound
+        case 500...599:
+            throw ShioriAPIError.serverError(statusCode)
+        default:
+            throw ShioriAPIError.serverError(statusCode)
+        }
+    }
     
     private func parseKeywords(_ keywords: String?) -> [BookmarkRequest.TagObject]? {
         guard let keywords = keywords?.trimmingCharacters(in: .whitespacesAndNewlines),
