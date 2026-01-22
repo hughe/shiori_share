@@ -361,50 +361,35 @@ final class ShioriAPI {
     
     private func createSession() -> URLSession {
         if settings.trustSelfSignedCerts {
+            let host = settings.serverURL.flatMap { URL(string: $0)?.host }
             let config = URLSessionConfiguration.default
-            return URLSession(configuration: config, delegate: SelfSignedCertDelegate(), delegateQueue: nil)
+            return URLSession(configuration: config, delegate: TrustSelfSignedCertificatesDelegate(allowedHost: host), delegateQueue: nil)
         }
         return URLSession.shared
     }
     
     private func mapNetworkError(_ error: Error) -> ShioriAPIError {
-        let nsError = error as NSError
-        
-        switch nsError.code {
-        case NSURLErrorServerCertificateUntrusted,
-             NSURLErrorSecureConnectionFailed,
-             NSURLErrorServerCertificateHasBadDate,
-             NSURLErrorServerCertificateNotYetValid,
-             NSURLErrorServerCertificateHasUnknownRoot:
-            return .certificateError
-            
-        case NSURLErrorCannotFindHost,
-             NSURLErrorCannotConnectToHost,
-             NSURLErrorNetworkConnectionLost,
-             NSURLErrorDNSLookupFailed,
-             NSURLErrorNotConnectedToInternet,
-             NSURLErrorTimedOut:
-            return .connectionFailed(error)
-            
-        default:
-            return .unknownError(error)
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .serverCertificateUntrusted,
+                 .secureConnectionFailed,
+                 .serverCertificateHasBadDate,
+                 .serverCertificateNotYetValid,
+                 .serverCertificateHasUnknownRoot:
+                return .certificateError
+                
+            case .cannotFindHost,
+                 .cannotConnectToHost,
+                 .networkConnectionLost,
+                 .dnsLookupFailed,
+                 .notConnectedToInternet,
+                 .timedOut:
+                return .connectionFailed(error)
+                
+            default:
+                return .unknownError(error)
+            }
         }
-    }
-}
-
-// MARK: - Self-Signed Certificate Delegate
-
-private class SelfSignedCertDelegate: NSObject, URLSessionDelegate {
-    func urlSession(
-        _ session: URLSession,
-        didReceive challenge: URLAuthenticationChallenge,
-        completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void
-    ) {
-        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-           let trust = challenge.protectionSpace.serverTrust {
-            completionHandler(.useCredential, URLCredential(trust: trust))
-        } else {
-            completionHandler(.performDefaultHandling, nil)
-        }
+        return .unknownError(error)
     }
 }

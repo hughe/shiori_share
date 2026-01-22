@@ -6,6 +6,7 @@ final class DebugLogger {
     
     private let osLog = OSLog(subsystem: AppConstants.mainAppBundleID, category: "ShioriShare")
     private let fileManager = FileManager.default
+    private let fileQueue = DispatchQueue(label: "DebugLogger.file")
     private let dateFormatter: DateFormatter = {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
@@ -142,11 +143,14 @@ final class DebugLogger {
         
         guard SettingsManager.shared.debugLoggingEnabled else { return }
         
-        let timestamp = dateFormatter.string(from: Date())
+        let now = Date()
         let fileName = (file as NSString).lastPathComponent
-        let logLine = "[\(timestamp)] \(level.rawValue): \(message) (\(fileName):\(line))\n"
         
-        appendToLogFile(logLine)
+        fileQueue.async { [self] in
+            let timestamp = dateFormatter.string(from: now)
+            let logLine = "[\(timestamp)] \(level.rawValue): \(message) (\(fileName):\(line))\n"
+            appendToLogFile(logLine)
+        }
     }
     
     private func appendToLogFile(_ content: String) {
@@ -155,11 +159,11 @@ final class DebugLogger {
         do {
             if fileManager.fileExists(atPath: logFile.path) {
                 let handle = try FileHandle(forWritingTo: logFile)
-                handle.seekToEndOfFile()
+                defer { try? handle.close() }
+                try handle.seekToEnd()
                 if let data = content.data(using: .utf8) {
-                    handle.write(data)
+                    try handle.write(contentsOf: data)
                 }
-                handle.closeFile()
             } else {
                 try content.write(to: logFile, atomically: true, encoding: .utf8)
             }

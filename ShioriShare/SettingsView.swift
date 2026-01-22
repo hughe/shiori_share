@@ -502,21 +502,11 @@ struct SettingsView: View {
     
     private func createURLSession() -> URLSession {
         if trustSelfSignedCerts {
+            let host = URL(string: serverURL.normalizedServerURL)?.host
             let config = URLSessionConfiguration.default
-            return URLSession(configuration: config, delegate: TrustingSessionDelegate(), delegateQueue: nil)
+            return URLSession(configuration: config, delegate: TrustSelfSignedCertificatesDelegate(allowedHost: host), delegateQueue: nil)
         }
         return URLSession.shared
-    }
-}
-
-private class TrustingSessionDelegate: NSObject, URLSessionDelegate {
-    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust,
-           let trust = challenge.protectionSpace.serverTrust {
-            completionHandler(.useCredential, URLCredential(trust: trust))
-        } else {
-            completionHandler(.performDefaultHandling, nil)
-        }
     }
 }
 
