@@ -4,6 +4,34 @@ struct InstructionsView: View {
     @State private var showingSettings = false
     
     var body: some View {
+        #if os(macOS)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                headerSection
+                Divider()
+                howToUseSection
+                Divider()
+                tipSection
+                Divider()
+                aboutSection
+            }
+            .padding()
+        }
+        .frame(minWidth: 400, minHeight: 400)
+        .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gearshape")
+                        .accessibilityLabel("Settings")
+                }
+            }
+        }
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
+        #else
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
@@ -19,7 +47,6 @@ struct InstructionsView: View {
             }
             .navigationTitle("Shiori Share")
             .toolbar {
-                #if os(iOS)
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showingSettings = true
@@ -28,22 +55,11 @@ struct InstructionsView: View {
                             .accessibilityLabel("Settings")
                     }
                 }
-                #else
-                ToolbarItem(placement: .automatic) {
-                    Button {
-                        showingSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                            .accessibilityLabel("Settings")
-                    }
-                }
-                #endif
             }
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
             }
         }
-        #if os(iOS)
         .navigationViewStyle(.stack)
         #endif
     }
