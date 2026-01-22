@@ -14,7 +14,7 @@
 **Target Platforms**:
 - iOS 15.0+
 - iPadOS 15.0+
-- macOS 12.0+ (Monterey)
+- macOS 15.0+ (Sequoia)
 
 **Recommendation**: Start with iOS/iPadOS, then add macOS support.
 

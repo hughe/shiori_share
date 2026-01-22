@@ -15,7 +15,7 @@ struct InstructionsView: View {
             }
             .padding()
         }
-        .frame(minWidth: 400, minHeight: 300)
+        .frame(minWidth: 340, minHeight: 300)
         .toolbar {
             ToolbarItem(placement: .automatic) {
                 Button {

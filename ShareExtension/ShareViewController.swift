@@ -46,7 +46,13 @@ class ShareViewController: NSViewController {
                 self?.extensionContext?.completeRequest(returningItems: nil, completionHandler: nil)
             }
         ))
+        hostingView.frame = NSRect(x: 0, y: 0, width: 400, height: 500)
         self.view = hostingView
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        self.preferredContentSize = NSSize(width: 400, height: 500)
     }
 }
 #endif
@@ -95,6 +101,43 @@ struct ShareExtensionView: View {
     }
     
     var body: some View {
+        #if os(macOS)
+        VStack(spacing: 0) {
+            HStack {
+                Text("Save to Shiori")
+                    .font(.headline)
+                Spacer()
+                Button("Cancel", action: onCancel)
+                    .keyboardShortcut(.cancelAction)
+            }
+            .padding()
+            
+            Divider()
+            
+            Group {
+                switch viewState {
+                case .loading:
+                    loadingView
+                case .form:
+                    formView
+                case .saving:
+                    savingView
+                case .success(let bookmarkId):
+                    successView(bookmarkId: bookmarkId)
+                case .error(let error):
+                    errorView(error: error)
+                case .notConfigured:
+                    notConfiguredView
+                case .noURL:
+                    noURLView
+                }
+            }
+        }
+        .frame(minWidth: 380, minHeight: 400)
+        .task {
+            await loadContent()
+        }
+        #else
         NavigationView {
             Group {
                 switch viewState {
@@ -115,21 +158,18 @@ struct ShareExtensionView: View {
                 }
             }
             .navigationTitle("Save to Shiori")
-            #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
-            #endif
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onCancel)
                 }
             }
         }
-        #if os(iOS)
         .navigationViewStyle(.stack)
-        #endif
         .task {
             await loadContent()
         }
+        #endif
     }
     
     // MARK: - Views
@@ -143,6 +183,88 @@ struct ShareExtensionView: View {
     }
     
     private var formView: some View {
+        #if os(macOS)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // URL Section
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("URL")
+                        .font(.headline)
+                    if let url = extractedURL {
+                        Text(url.absoluteString)
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                            .textSelection(.enabled)
+                    }
+                }
+                
+                Divider()
+                
+                // Details Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Details")
+                        .font(.headline)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("Title", text: $title)
+                            .textFieldStyle(.roundedBorder)
+                        
+                        Text("Description")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        TextEditor(text: $description)
+                            .frame(height: 60)
+                            .border(Color.secondary.opacity(0.3), width: 1)
+                        
+                        TextField("Tags (comma-separated)", text: $keywords)
+                            .textFieldStyle(.roundedBorder)
+                        
+                        if !tagSuggestions.isEmpty {
+                            HStack {
+                                ForEach(tagSuggestions.prefix(5), id: \.self) { tag in
+                                    Button(tag) { completeTag(tag) }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                }
+                            }
+                        } else if !displayedTags.isEmpty {
+                            HStack {
+                                ForEach(displayedTags, id: \.self) { tag in
+                                    Button(tag) { addTag(tag) }
+                                        .buttonStyle(.bordered)
+                                        .controlSize(.small)
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                // Options
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Create Archive", isOn: $createArchive)
+                    Toggle("Make Public", isOn: $makePublic)
+                }
+                
+                Divider()
+                
+                // Save Button
+                HStack {
+                    Spacer()
+                    Button {
+                        Task { await saveBookmark() }
+                    } label: {
+                        Text("Save Bookmark")
+                            .frame(minWidth: 120)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
+                }
+            }
+            .padding()
+        }
+        #else
         Form {
             Section {
                 if let url = extractedURL {
@@ -165,9 +287,7 @@ struct ShareExtensionView: View {
                     .accessibilityHint("Optional description or notes for the bookmark")
                 
                 TextField("Keywords (comma-separated)", text: $keywords)
-                    #if os(iOS)
                     .textInputAutocapitalization(.never)
-                    #endif
                     .autocorrectionDisabled()
                     .accessibilityHint("Enter tags separated by commas")
                 
@@ -226,15 +346,21 @@ struct ShareExtensionView: View {
                 }
             }
         }
+        #endif
     }
     
     private var savingView: some View {
         VStack(spacing: 16) {
             ProgressView()
+                #if os(macOS)
+                .scaleEffect(1.5)
+                #endif
                 .accessibilityHidden(true)
             Text("Saving bookmark...")
+                .font(.title3)
                 .foregroundColor(.secondary)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Saving bookmark, please wait")
     }
@@ -242,18 +368,20 @@ struct ShareExtensionView: View {
     private func successView(bookmarkId: Int) -> some View {
         VStack(spacing: 20) {
             Image(systemName: "checkmark.circle.fill")
-                .font(.system(size: 60))
+                .font(.system(size: 56))
                 .foregroundColor(.green)
                 .accessibilityHidden(true)
             
             Text("Bookmark saved!")
-                .font(.headline)
+                .font(.title2)
             
             Button("Done") {
                 onComplete()
             }
             .buttonStyle(.borderedProminent)
+            .controlSize(.large)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .contain)
         .onAppear {
             #if os(iOS)
@@ -269,17 +397,19 @@ struct ShareExtensionView: View {
     private func errorView(error: ShioriAPIError) -> some View {
         VStack(spacing: 20) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 60))
+                .font(.system(size: 56))
                 .foregroundColor(.orange)
                 .accessibilityHidden(true)
             
             Text(error.localizedDescription)
-                .font(.headline)
+                .font(.title3)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal)
             
             HStack(spacing: 16) {
                 Button("Cancel", action: onCancel)
                     .buttonStyle(.bordered)
+                    .controlSize(.large)
                 
                 if error.isRetryable {
                     Button("Retry") {
@@ -288,9 +418,11 @@ struct ShareExtensionView: View {
                         }
                     }
                     .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
                 }
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
         .onAppear {
             #if os(iOS)
@@ -302,41 +434,47 @@ struct ShareExtensionView: View {
     
     private var notConfiguredView: some View {
         VStack(spacing: 20) {
-            Image(systemName: "exclamationmark.triangle.fill")
-                .font(.system(size: 60))
-                .foregroundColor(.orange)
+            Image(systemName: "gearshape.circle")
+                .font(.system(size: 56))
+                .foregroundColor(.secondary)
             
             Text("Server Not Configured")
-                .font(.headline)
+                .font(.title2)
             
             Text("Please open the Shiori Share app to configure your server credentials.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal)
             
             Button("OK", action: onCancel)
                 .buttonStyle(.borderedProminent)
+                .controlSize(.large)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
     }
     
     private var noURLView: some View {
         VStack(spacing: 20) {
             Image(systemName: "link.badge.plus")
-                .font(.system(size: 60))
-                .foregroundColor(.orange)
+                .font(.system(size: 56))
+                .foregroundColor(.secondary)
             
             Text("No URL Found")
-                .font(.headline)
+                .font(.title2)
             
             Text("The shared content doesn't contain a URL. Try sharing from a browser or app that shares links.")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
+                .padding(.horizontal)
             
             Button("OK", action: onCancel)
                 .buttonStyle(.borderedProminent)
+                .controlSize(.large)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
     }
     
