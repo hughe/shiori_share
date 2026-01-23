@@ -30,7 +30,7 @@ struct InstructionsView: View {
             }
             .padding()
         }
-        .frame(minWidth: 340, minHeight: 300)
+        .frame(minWidth: 270, minHeight: 300)
         #else
         NavigationStack {
             ScrollView {
