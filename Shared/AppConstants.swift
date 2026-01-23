@@ -1,4 +1,5 @@
 import Foundation
+import Security
 
 enum AppConstants {
     
@@ -8,7 +9,46 @@ enum AppConstants {
     
     // MARK: - Shared Access Groups
     static let appGroupID = "group.net.emberson.shiorishare"
-    static let keychainAccessGroup = "net.emberson.shiorishare.shared"
+    static let keychainAccessGroup: String = {
+        guard let teamID = getTeamID() else {
+            return "net.emberson.shiorishare.shared"
+        }
+        return "\(teamID).net.emberson.shiorishare.shared"
+    }()
+    
+    private static func getTeamID() -> String? {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: "teamid.probe",
+            kSecAttrService as String: "teamid.probe",
+            kSecReturnAttributes as String: true
+        ]
+        
+        var result: AnyObject?
+        var status = SecItemCopyMatching(query as CFDictionary, &result)
+        
+        if status == errSecItemNotFound {
+            let addQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrAccount as String: "teamid.probe",
+                kSecAttrService as String: "teamid.probe",
+                kSecValueData as String: "probe".data(using: .utf8)!
+            ]
+            status = SecItemAdd(addQuery as CFDictionary, nil)
+            guard status == errSecSuccess else { return nil }
+            status = SecItemCopyMatching(query as CFDictionary, &result)
+        }
+        
+        guard status == errSecSuccess,
+              let attributes = result as? [String: Any],
+              let accessGroup = attributes[kSecAttrAccessGroup as String] as? String else {
+            return nil
+        }
+        
+        let components = accessGroup.split(separator: ".")
+        guard let teamID = components.first else { return nil }
+        return String(teamID)
+    }
     
     // MARK: - Keychain Keys (password only - other settings use UserDefaults)
     enum KeychainKey {
