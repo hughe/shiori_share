@@ -1,7 +1,20 @@
 import SwiftUI
 
 struct InstructionsView: View {
-    @State private var showingSettings = false
+    #if os(iOS)
+    @State private var isTesting = false
+    @State private var testResult: TestResult?
+    @State private var showPasswordPrompt = false
+    @State private var testPassword = ""
+    
+    private let settings = SettingsManager.shared
+    private let keychain = KeychainHelper.shared
+    
+    enum TestResult {
+        case success
+        case error(String)
+    }
+    #endif
     
     var body: some View {
         #if os(macOS)
@@ -16,24 +29,13 @@ struct InstructionsView: View {
             .padding()
         }
         .frame(minWidth: 340, minHeight: 300)
-        .toolbar {
-            ToolbarItem(placement: .automatic) {
-                Button {
-                    showingSettings = true
-                } label: {
-                    Image(systemName: "gearshape")
-                        .accessibilityLabel("Settings")
-                }
-            }
-        }
-        .sheet(isPresented: $showingSettings) {
-            SettingsView()
-        }
         #else
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
                     headerSection
+                    Divider()
+                    setupSection
                     Divider()
                     howToUseSection
                     Divider()
@@ -44,19 +46,6 @@ struct InstructionsView: View {
                 .padding()
             }
             .navigationTitle("Shiori Share")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showingSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                            .accessibilityLabel("Settings")
-                    }
-                }
-            }
-            .sheet(isPresented: $showingSettings) {
-                SettingsView()
-            }
         }
         #endif
     }
@@ -72,16 +61,137 @@ struct InstructionsView: View {
         }
     }
     
+    #if os(iOS)
+    private var setupSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Setup", systemImage: "gearshape")
+                .font(.headline)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Configure your Shiori server in the Settings app:")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                
+                HStack(spacing: 12) {
+                    Button {
+                        if let url = URL(string: UIApplication.openSettingsURLString) {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        Label("Open Settings", systemImage: "arrow.up.forward.app")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
+                    Button {
+                        testConnection()
+                    } label: {
+                        if isTesting {
+                            ProgressView()
+                                .controlSize(.small)
+                        } else {
+                            Label("Test Connection", systemImage: "network")
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                    .disabled(isTesting || settings.serverURL == nil || settings.username == nil)
+                }
+                
+                if let result = testResult {
+                    HStack {
+                        switch result {
+                        case .success:
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("Connection successful!")
+                        case .error(let message):
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.orange)
+                            Text(message)
+                        }
+                    }
+                    .font(.callout)
+                }
+            }
+        }
+        .alert("Enter Password", isPresented: $showPasswordPrompt) {
+            SecureField("Password", text: $testPassword)
+            Button("Cancel", role: .cancel) {
+                testPassword = ""
+            }
+            Button("Test") {
+                testConnectionWithPassword(testPassword)
+            }
+        } message: {
+            Text("Enter your Shiori password to test the connection.")
+        }
+    }
+    
+    private func testConnection() {
+        if let savedPassword = keychain.password {
+            testConnectionWithPassword(savedPassword)
+        } else {
+            showPasswordPrompt = true
+        }
+    }
+    
+    private func testConnectionWithPassword(_ password: String) {
+        guard let serverURL = settings.serverURL,
+              let username = settings.username else {
+            testResult = .error("Server not configured")
+            return
+        }
+        
+        isTesting = true
+        testResult = nil
+        testPassword = ""
+        
+        Task {
+            do {
+                _ = try await ShioriAPI.shared.login(
+                    serverURL: serverURL,
+                    username: username,
+                    password: password
+                )
+                
+                keychain.password = password
+                
+                await MainActor.run {
+                    testResult = .success
+                    isTesting = false
+                }
+            } catch let error as ShioriAPIError {
+                await MainActor.run {
+                    testResult = .error(error.localizedDescription)
+                    isTesting = false
+                }
+            } catch {
+                await MainActor.run {
+                    testResult = .error(error.localizedDescription)
+                    isTesting = false
+                }
+            }
+        }
+    }
+    #endif
+    
     private var howToUseSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Label("How to Use", systemImage: "iphone")
                 .font(.headline)
             
             VStack(alignment: .leading, spacing: 12) {
-                instructionStep(number: 1, text: "Tap the ⚙️ button above to configure your server")
+                #if os(macOS)
+                instructionStep(number: 1, text: "Click the ⚙️ button above to configure your server")
+                instructionStep(number: 2, text: "In Safari, click the share button on any page")
+                instructionStep(number: 3, text: "Select \"Shiori Share\" from the share menu")
+                instructionStep(number: 4, text: "Add tags and details, then click Save")
+                #else
+                instructionStep(number: 1, text: "Configure your server in Settings (above)")
                 instructionStep(number: 2, text: "In Safari, tap the share button on any page")
                 instructionStep(number: 3, text: "Select \"Shiori Share\" from the share sheet")
-                instructionStep(number: 4, text: "Add tags and details, then tap Save")
+                instructionStep(number: 4, text: "Enter your password on first use")
+                instructionStep(number: 5, text: "Add tags and details, then tap Save")
+                #endif
             }
         }
     }

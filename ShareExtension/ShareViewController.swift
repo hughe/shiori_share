@@ -61,6 +61,7 @@ class ShareViewController: NSViewController {
 
 enum ShareViewState {
     case loading
+    case passwordRequired
     case form
     case saving
     case success(bookmarkId: Int)
@@ -84,6 +85,9 @@ struct ShareExtensionView: View {
     @State private var createArchive: Bool = true
     @State private var makePublic: Bool = false
     @State private var savedBookmarkId: Int?
+    @State private var passwordInput: String = ""
+    @State private var passwordError: String = ""
+    @State private var isValidatingPassword: Bool = false
     
     #if os(macOS)
     private enum Field: Int, CaseIterable {
@@ -121,6 +125,8 @@ struct ShareExtensionView: View {
                 switch viewState {
                 case .loading:
                     loadingView
+                case .passwordRequired:
+                    passwordPromptView
                 case .form:
                     formView
                 case .saving:
@@ -146,6 +152,8 @@ struct ShareExtensionView: View {
                 switch viewState {
                 case .loading:
                     loadingView
+                case .passwordRequired:
+                    passwordPromptView
                 case .form:
                     formView
                 case .saving:
@@ -182,6 +190,65 @@ struct ShareExtensionView: View {
             Text("Loading...")
                 .foregroundColor(.secondary)
         }
+    }
+    
+    private var passwordPromptView: some View {
+        VStack(spacing: 24) {
+            Image(systemName: "key.fill")
+                .font(.system(size: 48))
+                .foregroundColor(.accentColor)
+            
+            Text("Enter Password")
+                .font(.title2)
+                .fontWeight(.semibold)
+            
+            Text("Enter your Shiori password to continue. This will be saved securely for future use.")
+                .font(.body)
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal)
+            
+            VStack(spacing: 8) {
+                SecureField("Password", text: $passwordInput)
+                    #if os(iOS)
+                    .textContentType(.password)
+                    #endif
+                    .textFieldStyle(.roundedBorder)
+                    .frame(maxWidth: 280)
+                    .disabled(isValidatingPassword)
+                
+                if !passwordError.isEmpty {
+                    Text(passwordError)
+                        .font(.caption)
+                        .foregroundColor(.red)
+                }
+            }
+            
+            HStack(spacing: 16) {
+                Button("Cancel", action: onCancel)
+                    .buttonStyle(.bordered)
+                    .controlSize(.large)
+                    .disabled(isValidatingPassword)
+                
+                Button {
+                    Task {
+                        await validateAndSavePassword()
+                    }
+                } label: {
+                    if isValidatingPassword {
+                        ProgressView()
+                            .controlSize(.small)
+                    } else {
+                        Text("Continue")
+                    }
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.large)
+                .disabled(passwordInput.isEmpty || isValidatingPassword)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding()
     }
     
     private var formView: some View {
@@ -534,6 +601,11 @@ struct ShareExtensionView: View {
             return
         }
         
+        // Check for password reset flag
+        if settings.checkAndClearPasswordResetFlag() {
+            keychain.clearPassword()
+        }
+        
         createArchive = settings.defaultCreateArchive
         makePublic = settings.defaultMakePublic
         
@@ -548,8 +620,54 @@ struct ShareExtensionView: View {
             return
         }
         
-        // Show the form - password will be checked when saving
+        // Check if password is available
+        if keychain.password == nil {
+            viewState = .passwordRequired
+            return
+        }
+        
+        // Show the form
         viewState = .form
+    }
+    
+    private func validateAndSavePassword() async {
+        guard let serverURL = settings.serverURL,
+              let username = settings.username else {
+            viewState = .notConfigured
+            return
+        }
+        
+        isValidatingPassword = true
+        passwordError = ""
+        
+        do {
+            _ = try await ShioriAPI.shared.login(
+                serverURL: serverURL,
+                username: username,
+                password: passwordInput
+            )
+            
+            // Password is valid, save it
+            keychain.password = passwordInput
+            
+            // Clear session so next API call uses fresh login
+            settings.clearSession()
+            
+            await MainActor.run {
+                isValidatingPassword = false
+                viewState = .form
+            }
+        } catch let error as ShioriAPIError {
+            await MainActor.run {
+                isValidatingPassword = false
+                passwordError = error.localizedDescription
+            }
+        } catch {
+            await MainActor.run {
+                isValidatingPassword = false
+                passwordError = error.localizedDescription
+            }
+        }
     }
     
     private func loadTagsIfNeeded() {

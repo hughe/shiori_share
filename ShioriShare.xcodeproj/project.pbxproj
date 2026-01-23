@@ -40,6 +40,7 @@
 		A4000004 /* MapNetworkErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000004 /* MapNetworkErrorTests.swift */; };
 		A4000005 /* SettingsManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000005 /* SettingsManagerTests.swift */; };
 		A4000006 /* FlowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000006 /* FlowLayoutTests.swift */; };
+		A1000010 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = B1000022 /* Settings.bundle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -98,6 +99,7 @@
 		B4000006 /* FlowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayoutTests.swift; sourceTree = "<group>"; };
 		P4000001 /* ShioriShareTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShioriShareTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B1000022 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		B2000001 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		B2000002 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
 		B2000003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -149,6 +151,7 @@
 				B1000002 /* ContentView.swift */,
 				B1000020 /* InstructionsView.swift */,
 				B1000021 /* SettingsView.swift */,
+				B1000022 /* Settings.bundle */,
 				B1000003 /* Assets.xcassets */,
 				B1000004 /* ShioriShare.entitlements */,
 				B1000005 /* Info.plist */,
@@ -312,6 +315,7 @@
 			files = (
 				A1000003 /* Assets.xcassets in Resources */,
 				A1000005 /* PrivacyInfo.xcprivacy in Resources */,
+				A1000010 /* Settings.bundle in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

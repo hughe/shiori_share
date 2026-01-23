@@ -64,6 +64,7 @@ enum AppConstants {
         static let recentTags = "recentTags"
         static let trustSelfSignedCerts = "trustSelfSignedCerts"
         static let debugLoggingEnabled = "debugLoggingEnabled"
+        static let resetPassword = "resetPassword"
         static let cachedSessionID = "cachedSessionID"
         static let sessionTimestamp = "sessionTimestamp"
     }

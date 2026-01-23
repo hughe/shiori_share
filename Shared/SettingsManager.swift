@@ -4,15 +4,52 @@ final class SettingsManager {
     static let shared = SettingsManager()
 
     private let defaults: UserDefaults
+    private let standardDefaults = UserDefaults.standard
 
     private init() {
         defaults = UserDefaults(suiteName: AppConstants.appGroupID) ?? .standard
+        registerDefaults()
+        #if !SHARE_EXTENSION
+        syncFromSettingsBundle()
+        #endif
     }
 
     // Internal initializer for testing
     internal init(defaults: UserDefaults) {
         self.defaults = defaults
     }
+    
+    private func registerDefaults() {
+        let defaultValues: [String: Any] = [
+            AppConstants.DefaultsKey.defaultCreateArchive: AppConstants.Defaults.createArchive,
+            AppConstants.DefaultsKey.defaultMakePublic: AppConstants.Defaults.makePublic,
+            AppConstants.DefaultsKey.trustSelfSignedCerts: AppConstants.Defaults.trustSelfSignedCerts,
+            AppConstants.DefaultsKey.debugLoggingEnabled: AppConstants.Defaults.debugLoggingEnabled,
+            AppConstants.DefaultsKey.resetPassword: false
+        ]
+        defaults.register(defaults: defaultValues)
+        standardDefaults.register(defaults: defaultValues)
+    }
+    
+    #if !SHARE_EXTENSION
+    func syncFromSettingsBundle() {
+        let keys = [
+            AppConstants.DefaultsKey.serverURL,
+            AppConstants.DefaultsKey.username,
+            AppConstants.DefaultsKey.defaultCreateArchive,
+            AppConstants.DefaultsKey.defaultMakePublic,
+            AppConstants.DefaultsKey.trustSelfSignedCerts,
+            AppConstants.DefaultsKey.debugLoggingEnabled,
+            AppConstants.DefaultsKey.resetPassword
+        ]
+        
+        for key in keys {
+            if let value = standardDefaults.object(forKey: key) {
+                defaults.set(value, forKey: key)
+            }
+        }
+    }
+    #endif
     
     // MARK: - Server Credentials (non-secret)
     
@@ -78,6 +115,24 @@ final class SettingsManager {
         set {
             defaults.set(newValue, forKey: AppConstants.DefaultsKey.debugLoggingEnabled)
         }
+    }
+    
+    // MARK: - Password Reset Flag
+    
+    var resetPassword: Bool {
+        get { defaults.bool(forKey: AppConstants.DefaultsKey.resetPassword) }
+        set {
+            defaults.set(newValue, forKey: AppConstants.DefaultsKey.resetPassword)
+            standardDefaults.set(newValue, forKey: AppConstants.DefaultsKey.resetPassword)
+        }
+    }
+    
+    func checkAndClearPasswordResetFlag() -> Bool {
+        if resetPassword {
+            resetPassword = false
+            return true
+        }
+        return false
     }
     
     // MARK: - Recent Tags

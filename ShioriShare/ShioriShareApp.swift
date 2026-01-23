@@ -14,6 +14,9 @@ struct ShioriShareApp: App {
             ContentView()
         }
         #if os(macOS)
+        Settings {
+            SettingsView()
+        }
         .commands {
             CommandGroup(replacing: .newItem) { }
             CommandGroup(replacing: .toolbar) { }
