@@ -22,6 +22,8 @@ struct InstructionsView: View {
             VStack(alignment: .leading, spacing: 24) {
                 headerSection
                 Divider()
+                configureSection
+                Divider()
                 howToUseSection
                 Divider()
                 tipSection
@@ -60,6 +62,21 @@ struct InstructionsView: View {
                 .foregroundColor(.secondary)
         }
     }
+    
+    #if os(macOS)
+    private var configureSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Label("Configure", systemImage: "gearshape")
+                .font(.headline)
+            
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Open Settings from the menu bar (⌘,) to configure your Shiori server URL and username.")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+        }
+    }
+    #endif
     
     #if os(iOS)
     private var setupSection: some View {
@@ -176,21 +193,22 @@ struct InstructionsView: View {
     
     private var howToUseSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Label("How to Use", systemImage: "iphone")
+            Label("How to Use", systemImage: "square.and.arrow.up")
                 .font(.headline)
             
             VStack(alignment: .leading, spacing: 12) {
                 #if os(macOS)
-                instructionStep(number: 1, text: "Click the ⚙️ button above to configure your server")
-                instructionStep(number: 2, text: "In Safari, click the share button on any page")
-                instructionStep(number: 3, text: "Select \"Shiori Share\" from the share menu")
-                instructionStep(number: 4, text: "Add tags and details, then click Save")
+                instructionStep(number: 1, text: "In Safari (or any browser), click the share button on any page")
+                instructionStep(number: 2, text: "Select \"Shiori Share\" from the share menu")
+                instructionStep(number: 3, text: "Enter your password if prompted (first time only)")
+                instructionStep(number: 4, text: "Add tags and a description if desired")
+                instructionStep(number: 5, text: "Click Save to bookmark the page")
                 #else
-                instructionStep(number: 1, text: "Configure your server in Settings (above)")
-                instructionStep(number: 2, text: "In Safari, tap the share button on any page")
-                instructionStep(number: 3, text: "Select \"Shiori Share\" from the share sheet")
-                instructionStep(number: 4, text: "Enter your password on first use")
-                instructionStep(number: 5, text: "Add tags and details, then tap Save")
+                instructionStep(number: 1, text: "In Safari (or any browser), tap the share button on any page")
+                instructionStep(number: 2, text: "Select \"Shiori Share\" from the share sheet")
+                instructionStep(number: 3, text: "Enter your password if prompted (first time only)")
+                instructionStep(number: 4, text: "Add tags and a description if desired")
+                instructionStep(number: 5, text: "Tap Save to bookmark the page")
                 #endif
             }
         }
