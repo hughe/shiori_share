@@ -1,6 +1,6 @@
 # Shiori Share - Build Makefile
 
-.PHONY: all build build-ios build-macos clean test open help
+.PHONY: all build build-ios build-macos clean test open help cli
 
 # Default target
 all: build-sim
@@ -45,6 +45,19 @@ test:
 		-destination 'platform=iOS Simulator,name=iPhone 17' \
 		test
 
+# Command-line API test tool (macOS). Exercises Shared/ShioriClient.swift
+# against a real server without the app or share extension.
+CLI_SOURCES = Shared/ShioriClient.swift Shared/String+URL.swift \
+	Shared/TrustSelfSignedCertificatesDelegate.swift Tools/shiori-cli/main.swift
+
+CLI_TARGET = $(shell uname -m)-apple-macos13
+
+cli: build/shiori-cli
+
+build/shiori-cli: $(CLI_SOURCES)
+	mkdir -p build
+	xcrun swiftc -swift-version 5 -target $(CLI_TARGET) -O -o $@ $(CLI_SOURCES)
+
 # Open project in Xcode
 open:
 	open ShioriShare.xcodeproj
@@ -69,3 +82,4 @@ help:
 	@echo "  make test       - Run tests on iOS Simulator"
 	@echo "  make open       - Open project in Xcode"
 	@echo "  make archive    - Create release archive"
+	@echo "  make cli        - Build build/shiori-cli (API test tool)"

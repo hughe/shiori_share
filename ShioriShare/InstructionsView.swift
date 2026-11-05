@@ -2,10 +2,12 @@ import SwiftUI
 
 struct InstructionsView: View {
     #if os(iOS)
+    @Environment(\.scenePhase) private var scenePhase
     @State private var isTesting = false
     @State private var testResult: TestResult?
     @State private var showPasswordPrompt = false
     @State private var testPassword = ""
+    @State private var isConfigured = false
     
     private let settings = SettingsManager.shared
     private let keychain = KeychainHelper.shared
@@ -48,9 +50,24 @@ struct InstructionsView: View {
                 .padding()
             }
             .navigationTitle("Shiori Share")
+            .onChange(of: scenePhase) { _, newPhase in
+                if newPhase == .active {
+                    settings.syncFromSettingsBundle()
+                    updateConfiguredState()
+                }
+            }
+            .onAppear {
+                updateConfiguredState()
+            }
         }
         #endif
     }
+    
+    #if os(iOS)
+    private func updateConfiguredState() {
+        isConfigured = settings.serverURL != nil && settings.username != nil
+    }
+    #endif
     
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -110,7 +127,7 @@ struct InstructionsView: View {
                         }
                     }
                     .buttonStyle(.bordered)
-                    .disabled(isTesting || settings.serverURL == nil || settings.username == nil)
+                    .disabled(isTesting || !isConfigured)
                 }
                 
                 if let result = testResult {
@@ -171,6 +188,8 @@ struct InstructionsView: View {
                 )
                 
                 keychain.password = password
+                
+                await ShioriAPI.shared.refreshPopularTags()
                 
                 await MainActor.run {
                     testResult = .success

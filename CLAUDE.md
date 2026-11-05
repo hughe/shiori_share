@@ -31,6 +31,9 @@ make clean
 
 # Open project in Xcode
 make open
+
+# Build the command-line API test tool (build/shiori-cli)
+make cli
 ```
 
 ### Running Single Tests
@@ -85,8 +88,19 @@ The app and share extension communicate via **App Groups** and **Keychain Sharin
 
 ### Key Components
 
+**ShioriClient** (`Shared/ShioriClient.swift`)
+- Stateless HTTP client: login, add bookmark, fetch tags, status/error mapping
+- Also holds the API models and `ShioriAPIError`
+- No dependency on settings, keychain or logging, so it compiles standalone
+- `ShioriAuthStyle` selects `X-Session-Id` (Shiori v1.7.x only) or `Authorization: Bearer` (v1.7.x and v1.8.0)
+
+**shiori-cli** (`Tools/shiori-cli/main.swift`)
+- Command-line test program built from `ShioriClient.swift`, `String+URL.swift` and `TrustSelfSignedCertificatesDelegate.swift` (`make cli`)
+- `build/shiori-cli --server <url> --user <name> probe|login|tags|add <url>`; password from `$SHIORI_PASSWORD` or prompt
+- `probe` reports which auth styles a server accepts; use it against a test server before switching auth styles
+
 **ShioriAPI** (`Shared/ShioriAPI.swift`)
-- Singleton REST API client for Shiori server
+- Singleton app-facing wrapper around `ShioriClient`
 - Handles authentication (session-based with 1-hour cache)
 - Endpoints: login (`/api/v1/auth/login`), bookmarks (`/api/bookmarks`), tags (`/api/tags`)
 - Automatic session refresh when expired
@@ -195,5 +209,5 @@ bd sync               # Sync with git remote
 
 - **Simulator Limitation**: Keychain access group sharing doesn't work on iOS Simulator. Use device for testing credential sharing between app and extension.
 - **API Versions**: Login uses v1 API (`/api/v1/auth/login`), bookmarks use legacy API (`/api/bookmarks`) for stability.
-- **Session Security**: Sessions are X-Session-Id header-based, not cookie-based.
+- **Session Security**: Requests authenticate with a header, not cookies. The style is `ShioriAPI.authStyle` (currently `.sessionID`, i.e. `X-Session-Id`; planned switch to `.bearer`, see TODO.md).
 - **Certificate Trust**: Self-signed certificate trust applies to specific host only, configured via `TrustSelfSignedCertificatesDelegate`.

@@ -22,6 +22,8 @@
 		A100000D /* ShioriAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016 /* ShioriAPI.swift */; };
 		A100000E /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000017 /* FlowLayout.swift */; };
 		A100000F /* TrustSelfSignedCertificatesDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000018 /* TrustSelfSignedCertificatesDelegate.swift */; };
+		A1000011 /* ShioriClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000019 /* ShioriClient.swift */; };
+		A1000010 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = B1000022 /* Settings.bundle */; };
 		A2000001 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2000001 /* ShareViewController.swift */; };
 		A2000002 /* AppConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000010 /* AppConstants.swift */; };
 		A2000003 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B2000003 /* PrivacyInfo.xcprivacy */; };
@@ -33,6 +35,7 @@
 		A2000009 /* ShioriAPI.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000016 /* ShioriAPI.swift */; };
 		A200000A /* FlowLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000017 /* FlowLayout.swift */; };
 		A200000B /* TrustSelfSignedCertificatesDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000018 /* TrustSelfSignedCertificatesDelegate.swift */; };
+		A200000C /* ShioriClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1000019 /* ShioriClient.swift */; };
 		A3000001 /* ShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = P2000001 /* ShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A4000001 /* StringURLTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000001 /* StringURLTests.swift */; };
 		A4000002 /* ParseKeywordsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000002 /* ParseKeywordsTests.swift */; };
@@ -40,7 +43,6 @@
 		A4000004 /* MapNetworkErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000004 /* MapNetworkErrorTests.swift */; };
 		A4000005 /* SettingsManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000005 /* SettingsManagerTests.swift */; };
 		A4000006 /* FlowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000006 /* FlowLayoutTests.swift */; };
-		A1000010 /* Settings.bundle in Resources */ = {isa = PBXBuildFile; fileRef = B1000022 /* Settings.bundle */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -90,22 +92,23 @@
 		B1000016 /* ShioriAPI.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShioriAPI.swift; sourceTree = "<group>"; };
 		B1000017 /* FlowLayout.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayout.swift; sourceTree = "<group>"; };
 		B1000018 /* TrustSelfSignedCertificatesDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrustSelfSignedCertificatesDelegate.swift; sourceTree = "<group>"; };
+		B1000019 /* ShioriClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShioriClient.swift; sourceTree = "<group>"; };
 		B1000020 /* InstructionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstructionsView.swift; sourceTree = "<group>"; };
-		B4000001 /* StringURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringURLTests.swift; sourceTree = "<group>"; };
-		B4000002 /* ParseKeywordsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParseKeywordsTests.swift; sourceTree = "<group>"; };
-		B4000003 /* ShioriAPIErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShioriAPIErrorTests.swift; sourceTree = "<group>"; };
-		B4000004 /* MapNetworkErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapNetworkErrorTests.swift; sourceTree = "<group>"; };
-		B4000005 /* SettingsManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManagerTests.swift; sourceTree = "<group>"; };
-		B4000006 /* FlowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayoutTests.swift; sourceTree = "<group>"; };
-		P4000001 /* ShioriShareTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShioriShareTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B1000021 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B1000022 /* Settings.bundle */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.plug-in"; path = Settings.bundle; sourceTree = "<group>"; };
 		B2000001 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		B2000002 /* ShareExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = ShareExtension.entitlements; sourceTree = "<group>"; };
 		B2000003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		B2000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		B4000001 /* StringURLTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringURLTests.swift; sourceTree = "<group>"; };
+		B4000002 /* ParseKeywordsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParseKeywordsTests.swift; sourceTree = "<group>"; };
+		B4000003 /* ShioriAPIErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShioriAPIErrorTests.swift; sourceTree = "<group>"; };
+		B4000004 /* MapNetworkErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapNetworkErrorTests.swift; sourceTree = "<group>"; };
+		B4000005 /* SettingsManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManagerTests.swift; sourceTree = "<group>"; };
+		B4000006 /* FlowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayoutTests.swift; sourceTree = "<group>"; };
 		P1000001 /* ShioriShare.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShioriShare.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		P2000001 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		P4000001 /* ShioriShareTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShioriShareTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -180,6 +183,7 @@
 				B1000011 /* KeychainHelper.swift */,
 				B1000012 /* SettingsManager.swift */,
 				B1000016 /* ShioriAPI.swift */,
+				B1000019 /* ShioriClient.swift */,
 				B1000013 /* String+URL.swift */,
 				B1000018 /* TrustSelfSignedCertificatesDelegate.swift */,
 				B1000014 /* URLExtractor.swift */,
@@ -345,6 +349,7 @@
 				A1000009 /* URLExtractor.swift in Sources */,
 				A100000A /* DebugLogger.swift in Sources */,
 				A100000D /* ShioriAPI.swift in Sources */,
+				A1000011 /* ShioriClient.swift in Sources */,
 				A100000E /* FlowLayout.swift in Sources */,
 				A100000F /* TrustSelfSignedCertificatesDelegate.swift in Sources */,
 			);
@@ -362,6 +367,7 @@
 				A2000007 /* URLExtractor.swift in Sources */,
 				A2000008 /* DebugLogger.swift in Sources */,
 				A2000009 /* ShioriAPI.swift in Sources */,
+				A200000C /* ShioriClient.swift in Sources */,
 				A200000A /* FlowLayout.swift in Sources */,
 				A200000B /* TrustSelfSignedCertificatesDelegate.swift in Sources */,
 			);

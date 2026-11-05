@@ -80,12 +80,16 @@ enum AppConstants {
     }
     
     // MARK: - API Endpoints
-    // Login uses v1 API, bookmarks use legacy API (more stable)
+    // Login uses v1 API, bookmarks use legacy API
+    // Note: Shiori v1.8.0 has a bug where /api/bookmarks returns 502
+    // See: https://github.com/go-shiori/shiori/issues/1176
+    // Downgrade to v1.7.x or wait for fix
+    // Paths are defined in ShioriClient.Path; these aliases are kept for callers.
     enum API {
-        static let loginPath = "/api/v1/auth/login"
-        static let bookmarksPath = "/api/bookmarks"
-        static let tagsPath = "/api/tags"
-        static let logoutPath = "/api/logout"
+        static let loginPath = ShioriClient.Path.login
+        static let bookmarksPath = ShioriClient.Path.bookmarks
+        static let tagsPath = ShioriClient.Path.tags
+        static let logoutPath = ShioriClient.Path.logout
     }
     
     // MARK: - Timing
