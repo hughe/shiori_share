@@ -20,3 +20,5 @@ Build and verify the current signed macOS app, replace the existing /Application
 make build-macos passed. Verified the signed app and nested extension with codesign --verify --deep --strict. Replaced /Applications/ShioriShare.app and launched it with open. Installed debug library hash matches the build. macOS pluginkit lists the extension at /Applications/ShioriShare.app/Contents/PlugIns/ShareExtension.appex, and an installed extension process was observed. Previous app backed up at /private/tmp/shiori-macos-install.fQenVG/Previous-ShioriShare.app.
 
 User confirmed the installed macOS build works against the Shiori v1.8.0 test environment.
+
+User also confirmed the iOS build works against the Shiori v1.8.0 test environment.
