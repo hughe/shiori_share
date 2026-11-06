@@ -65,8 +65,8 @@ enum AppConstants {
         static let trustSelfSignedCerts = "trustSelfSignedCerts"
         static let debugLoggingEnabled = "debugLoggingEnabled"
         static let resetPassword = "resetPassword"
-        static let cachedSessionID = "cachedSessionID"
-        static let sessionTimestamp = "sessionTimestamp"
+        static let cachedToken = "cachedToken"
+        static let tokenTimestamp = "tokenTimestamp"
     }
     
     // MARK: - Default Values
@@ -81,9 +81,6 @@ enum AppConstants {
     
     // MARK: - API Endpoints
     // Login uses v1 API, bookmarks use legacy API
-    // Note: Shiori v1.8.0 has a bug where /api/bookmarks returns 502
-    // See: https://github.com/go-shiori/shiori/issues/1176
-    // Downgrade to v1.7.x or wait for fix
     // Paths are defined in ShioriClient.Path; these aliases are kept for callers.
     enum API {
         static let loginPath = ShioriClient.Path.login
@@ -95,7 +92,7 @@ enum AppConstants {
     // MARK: - Timing
     enum Timing {
         static let successAutoCloseDelay: TimeInterval = 1.5
-        static let sessionCacheExpiry: TimeInterval = 3600 // 1 hour
+        static let tokenCacheExpiry: TimeInterval = 3600 // 1 hour
         static let networkTimeout: TimeInterval = 30
         static let debugLogRetentionDays = 7
     }

@@ -104,7 +104,7 @@ struct SettingsView: View {
                         Spacer()
                         Button("Clear") {
                             keychain.clearPassword()
-                            settings.clearSession()
+                            settings.clearToken()
                         }
                         .buttonStyle(.bordered)
                     }

@@ -159,29 +159,30 @@ final class SettingsManager {
         }
     }
     
-    // MARK: - Session Cache
+    // MARK: - Token Cache
     
-    var cachedSessionID: String? {
-        get { defaults.string(forKey: AppConstants.DefaultsKey.cachedSessionID) }
-        set { defaults.set(newValue, forKey: AppConstants.DefaultsKey.cachedSessionID) }
+    // A new key deliberately ignores legacy cachedSessionID values on upgrade.
+    var cachedToken: String? {
+        get { defaults.string(forKey: AppConstants.DefaultsKey.cachedToken) }
+        set { defaults.set(newValue, forKey: AppConstants.DefaultsKey.cachedToken) }
     }
     
-    var sessionTimestamp: Date? {
-        get { defaults.object(forKey: AppConstants.DefaultsKey.sessionTimestamp) as? Date }
-        set { defaults.set(newValue, forKey: AppConstants.DefaultsKey.sessionTimestamp) }
+    var tokenTimestamp: Date? {
+        get { defaults.object(forKey: AppConstants.DefaultsKey.tokenTimestamp) as? Date }
+        set { defaults.set(newValue, forKey: AppConstants.DefaultsKey.tokenTimestamp) }
     }
     
-    var isSessionValid: Bool {
-        guard cachedSessionID != nil,
-              let timestamp = sessionTimestamp else {
+    var isTokenValid: Bool {
+        guard cachedToken != nil,
+              let timestamp = tokenTimestamp else {
             return false
         }
-        return Date().timeIntervalSince(timestamp) < AppConstants.Timing.sessionCacheExpiry
+        return Date().timeIntervalSince(timestamp) < AppConstants.Timing.tokenCacheExpiry
     }
     
-    func clearSession() {
-        cachedSessionID = nil
-        sessionTimestamp = nil
+    func clearToken() {
+        cachedToken = nil
+        tokenTimestamp = nil
     }
     
     // MARK: - Reset
@@ -192,6 +193,6 @@ final class SettingsManager {
         trustSelfSignedCerts = AppConstants.Defaults.trustSelfSignedCerts
         debugLoggingEnabled = AppConstants.Defaults.debugLoggingEnabled
         recentTags = []
-        clearSession()
+        clearToken()
     }
 }

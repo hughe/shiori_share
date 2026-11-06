@@ -651,7 +651,7 @@ struct ShareExtensionView: View {
             keychain.password = passwordInput
             
             // Clear session so next API call uses fresh login
-            settings.clearSession()
+            settings.clearToken()
             
             await MainActor.run {
                 isValidatingPassword = false

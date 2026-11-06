@@ -98,9 +98,6 @@ enum ShioriAPIError: LocalizedError {
         case .connectionFailed(let error):
             return "Connection failed: \(error.localizedDescription)"
         case .serverError(let code):
-            if code == 502 {
-                return "API unavailable (502). Shiori v1.8.0 has a known bug. Please downgrade to v1.7.x."
-            }
             return "Server error (\(code))"
         case .unauthorized:
             return "Session expired. Please try again."
@@ -113,7 +110,7 @@ enum ShioriAPIError: LocalizedError {
         case .unknownError(let error):
             return error.localizedDescription
         case .apiNotAvailable:
-            return "Bookmark API unavailable. Shiori v1.8.0 has a known bug. Please use v1.7.x."
+            return "Bookmark API unavailable. Please try again later."
         }
     }
     
@@ -182,6 +179,9 @@ struct ShioriClient {
     var trustSelfSignedCerts: Bool
     var timeout: TimeInterval
 
+    /// Optional caller-owned session, used for isolated HTTP tests.
+    private let session: URLSession?
+
     /// Called before each request with (method, URL). Never sees credentials.
     var onRequest: ((String, URL) -> Void)?
     /// Called after each response with (method, URL, status code, duration).
@@ -191,12 +191,14 @@ struct ShioriClient {
         baseURL: URL,
         authStyle: ShioriAuthStyle,
         trustSelfSignedCerts: Bool = false,
-        timeout: TimeInterval = 30
+        timeout: TimeInterval = 30,
+        session: URLSession? = nil
     ) {
         self.baseURL = baseURL
         self.authStyle = authStyle
         self.trustSelfSignedCerts = trustSelfSignedCerts
         self.timeout = timeout
+        self.session = session
     }
 
     // MARK: Endpoints
@@ -269,9 +271,9 @@ struct ShioriClient {
         onRequest?(method, url)
         let startTime = Date()
 
-        let session = makeSession()
+        let session = self.session ?? makeSession()
         defer {
-            if session !== URLSession.shared {
+            if self.session == nil && session !== URLSession.shared {
                 session.finishTasksAndInvalidate()
             }
         }

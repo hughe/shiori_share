@@ -101,16 +101,16 @@ The app and share extension communicate via **App Groups** and **Keychain Sharin
 
 **ShioriAPI** (`Shared/ShioriAPI.swift`)
 - Singleton app-facing wrapper around `ShioriClient`
-- Handles authentication (session-based with 1-hour cache)
+- Handles authentication (Bearer JWT with 1-hour cache)
 - Endpoints: login (`/api/v1/auth/login`), bookmarks (`/api/bookmarks`), tags (`/api/tags`)
-- Automatic session refresh when expired
+- Automatic token refresh when expired
 - Self-signed certificate support via `TrustSelfSignedCertificatesDelegate`
 - Centralized status code handling with `mapStatusCode()` method
 
 **SettingsManager** (`Shared/SettingsManager.swift`)
 - Singleton for non-sensitive settings storage
 - Uses `UserDefaults` with App Group suite
-- Stores: server URL, username, default preferences, tag cache, session cache
+- Stores: server URL, username, default preferences, tag cache, token cache
 - Passwords stored separately in Keychain
 
 **KeychainHelper** (`Shared/KeychainHelper.swift`)
@@ -124,12 +124,12 @@ The app and share extension communicate via **App Groups** and **Keychain Sharin
 - Tries multiple extraction strategies: direct URL, plain text with URL extraction
 - Uses `String.extractedURL` extension for text parsing
 
-### Session Management
+### Token Management
 
-- Sessions obtained via POST to `/api/v1/auth/login`
-- Sessions cached for 1 hour in `SettingsManager`
-- Automatic re-login when 401 received (except during login itself)
-- Session cleared on 401 to trigger fresh login
+- Bearer JWTs obtained via POST to `/api/v1/auth/login`
+- Tokens cached for 1 hour in `SettingsManager`
+- A 401 clears the token; the next attempt logs in again
+- Token cleared on 401 to trigger fresh login
 
 ### Tag System
 
@@ -209,5 +209,5 @@ bd sync               # Sync with git remote
 
 - **Simulator Limitation**: Keychain access group sharing doesn't work on iOS Simulator. Use device for testing credential sharing between app and extension.
 - **API Versions**: Login uses v1 API (`/api/v1/auth/login`), bookmarks use legacy API (`/api/bookmarks`) for stability.
-- **Session Security**: Requests authenticate with a header, not cookies. The style is `ShioriAPI.authStyle` (currently `.sessionID`, i.e. `X-Session-Id`; planned switch to `.bearer`, see TODO.md).
+- **Session Security**: Requests authenticate with a header, not cookies. The app uses `Authorization: Bearer <token>` with the login JWT. Tokens are cached in app-group UserDefaults for at most one hour; the new cache keys ignore legacy session IDs on upgrade.
 - **Certificate Trust**: Self-signed certificate trust applies to specific host only, configured via `TrustSelfSignedCertificatesDelegate`.

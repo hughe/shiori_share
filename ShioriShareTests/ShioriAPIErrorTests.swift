@@ -31,6 +31,12 @@ final class ShioriAPIErrorTests: XCTestCase {
         XCTAssertEqual(error.errorDescription, "Server error (500)")
     }
 
+    func testErrorDescription_badGateway() {
+        XCTAssertEqual(ShioriAPIError.serverError(502).errorDescription, "Server error (502)")
+        XCTAssertEqual(ShioriAPIError.apiNotAvailable.errorDescription,
+                       "Bookmark API unavailable. Please try again later.")
+    }
+
     func testErrorDescription_unauthorized() {
         let error = ShioriAPIError.unauthorized
         XCTAssertEqual(error.errorDescription, "Session expired. Please try again.")

@@ -7,13 +7,12 @@ import Foundation
 /// App-facing Shiori API used by the main app and the share extension.
 ///
 /// Wraps the stateless `ShioriClient` with the stored server settings, the
-/// keychain password, session caching and recent-tag bookkeeping.
+/// keychain password, token caching and recent-tag bookkeeping.
 final class ShioriAPI {
     static let shared = ShioriAPI()
 
-    /// How requests authenticate. `.sessionID` only works with Shiori v1.7.x;
-    /// `.bearer` works with v1.7.x and v1.8.0. Switching is planned, see TODO.md.
-    static let authStyle: ShioriAuthStyle = .sessionID
+    /// Bearer JWT authentication works with Shiori v1.7.x and v1.8.0.
+    static let authStyle: ShioriAuthStyle = .bearer
 
     private let keychain = KeychainHelper.shared
     private let settings = SettingsManager.shared
@@ -23,7 +22,7 @@ final class ShioriAPI {
 
     // MARK: - Public API
 
-    /// Login with explicitly provided credentials (doesn't cache session)
+    /// Login with explicitly provided credentials (doesn't cache token)
     func login(serverURL: String, username: String, password: String) async throws -> String {
         let client = try makeClient(serverURL: serverURL)
         do {
@@ -35,7 +34,7 @@ final class ShioriAPI {
         }
     }
 
-    /// Login using stored credentials (caches session)
+    /// Login using stored credentials (caches token)
     func login() async throws -> String {
         guard let serverURL = settings.serverURL,
               let username = settings.username,
@@ -43,13 +42,13 @@ final class ShioriAPI {
             throw ShioriAPIError.notConfigured
         }
 
-        let session = try await login(serverURL: serverURL, username: username, password: password)
+        let token = try await login(serverURL: serverURL, username: username, password: password)
 
-        // Cache the session for reuse
-        settings.cachedSessionID = session
-        settings.sessionTimestamp = Date()
+        // Cache the token for reuse
+        settings.cachedToken = token
+        settings.tokenTimestamp = Date()
 
-        return session
+        return token
     }
 
     func addBookmark(
@@ -60,7 +59,7 @@ final class ShioriAPI {
         createArchive: Bool,
         makePublic: Bool
     ) async throws -> BookmarkResponse {
-        let sessionID = try await getValidSession()
+        let token = try await getValidToken()
         let client = try makeClient()
 
         let tags = parseKeywords(keywords)
@@ -74,7 +73,7 @@ final class ShioriAPI {
         )
 
         do {
-            let bookmarkResponse = try await client.addBookmark(bookmarkRequest, auth: sessionID)
+            let bookmarkResponse = try await client.addBookmark(bookmarkRequest, auth: token)
 
             if let tags = tags {
                 settings.addRecentTags(tags.map { $0.name })
@@ -88,11 +87,11 @@ final class ShioriAPI {
     }
 
     func fetchTags() async throws -> [TagItem] {
-        let sessionID = try await getValidSession()
+        let token = try await getValidToken()
         let client = try makeClient()
 
         do {
-            let tags = try await client.fetchTags(auth: sessionID)
+            let tags = try await client.fetchTags(auth: token)
             logger.info("Fetched \(tags.count) tags from server")
             return tags
         } catch {
@@ -114,18 +113,18 @@ final class ShioriAPI {
         }
     }
 
-    // MARK: - Session Management
+    // MARK: - Token Management
 
-    private func getValidSession() async throws -> String {
-        if settings.isSessionValid, let session = settings.cachedSessionID {
-            return session
+    private func getValidToken() async throws -> String {
+        if settings.isTokenValid, let token = settings.cachedToken {
+            return token
         }
 
         return try await login()
     }
 
-    func clearSession() {
-        settings.clearSession()
+    func clearToken() {
+        settings.clearToken()
     }
 
     // MARK: - Helper Methods
@@ -167,14 +166,14 @@ final class ShioriAPI {
         return client
     }
 
-    /// Logs decoding errors and clears the cached session on 401.
+    /// Logs decoding errors and clears the cached token on 401.
     private func handle(_ error: Error, context: String) -> Error {
         if let apiError = error as? ShioriAPIError {
             switch apiError {
             case .decodingError(let underlying):
                 logger.error(underlying, context: "\(context) decoding error")
             case .unauthorized:
-                settings.clearSession()
+                settings.clearToken()
             default:
                 break
             }

@@ -150,76 +150,83 @@ final class SettingsManagerTests: XCTestCase {
         XCTAssertEqual(settingsManager.recentTags.first, "newtag")
     }
 
-    // MARK: - Session Cache
+    // MARK: - Token Cache
 
-    func testCachedSessionID_setAndGet() {
-        settingsManager.cachedSessionID = "session123"
-        XCTAssertEqual(settingsManager.cachedSessionID, "session123")
+    func testLegacySessionCacheIsIgnoredOnUpgrade() {
+        testDefaults.set("legacy-session", forKey: "cachedSessionID")
+        testDefaults.set(Date(), forKey: "sessionTimestamp")
+        XCTAssertNil(settingsManager.cachedToken)
+        XCTAssertFalse(settingsManager.isTokenValid)
     }
 
-    func testSessionTimestamp_setAndGet() {
+    func testCachedToken_setAndGet() {
+        settingsManager.cachedToken = "jwt123"
+        XCTAssertEqual(settingsManager.cachedToken, "jwt123")
+    }
+
+    func testTokenTimestamp_setAndGet() {
         let now = Date()
-        settingsManager.sessionTimestamp = now
-        XCTAssertNotNil(settingsManager.sessionTimestamp)
-        if let timestamp = settingsManager.sessionTimestamp {
+        settingsManager.tokenTimestamp = now
+        XCTAssertNotNil(settingsManager.tokenTimestamp)
+        if let timestamp = settingsManager.tokenTimestamp {
             XCTAssertEqual(timestamp.timeIntervalSince1970, now.timeIntervalSince1970, accuracy: 1.0)
         }
     }
 
-    func testIsSessionValid_withNoSession_returnsFalse() {
-        XCTAssertFalse(settingsManager.isSessionValid)
+    func testIsTokenValid_withNoToken_returnsFalse() {
+        XCTAssertFalse(settingsManager.isTokenValid)
     }
 
-    func testIsSessionValid_withNoTimestamp_returnsFalse() {
-        settingsManager.cachedSessionID = "session123"
-        XCTAssertFalse(settingsManager.isSessionValid)
+    func testIsTokenValid_withNoTimestamp_returnsFalse() {
+        settingsManager.cachedToken = "jwt123"
+        XCTAssertFalse(settingsManager.isTokenValid)
     }
 
-    func testIsSessionValid_withRecentTimestamp_returnsTrue() {
-        settingsManager.cachedSessionID = "session123"
-        settingsManager.sessionTimestamp = Date()
-        XCTAssertTrue(settingsManager.isSessionValid)
+    func testIsTokenValid_withRecentTimestamp_returnsTrue() {
+        settingsManager.cachedToken = "jwt123"
+        settingsManager.tokenTimestamp = Date()
+        XCTAssertTrue(settingsManager.isTokenValid)
     }
 
-    func testIsSessionValid_withExpiredTimestamp_returnsFalse() {
-        settingsManager.cachedSessionID = "session123"
-        // Set timestamp to more than sessionCacheExpiry (3600 seconds) ago
-        settingsManager.sessionTimestamp = Date().addingTimeInterval(-3601)
-        XCTAssertFalse(settingsManager.isSessionValid)
+    func testIsTokenValid_withExpiredTimestamp_returnsFalse() {
+        settingsManager.cachedToken = "jwt123"
+        // Set timestamp to more than tokenCacheExpiry (3600 seconds) ago
+        settingsManager.tokenTimestamp = Date().addingTimeInterval(-3601)
+        XCTAssertFalse(settingsManager.isTokenValid)
     }
 
-    func testIsSessionValid_withTimestampJustBeforeExpiry_returnsTrue() {
-        settingsManager.cachedSessionID = "session123"
-        // Set timestamp to just under sessionCacheExpiry (3600 seconds) ago
-        settingsManager.sessionTimestamp = Date().addingTimeInterval(-3599)
-        XCTAssertTrue(settingsManager.isSessionValid)
+    func testIsTokenValid_withTimestampJustBeforeExpiry_returnsTrue() {
+        settingsManager.cachedToken = "jwt123"
+        // Set timestamp to just under tokenCacheExpiry (3600 seconds) ago
+        settingsManager.tokenTimestamp = Date().addingTimeInterval(-3599)
+        XCTAssertTrue(settingsManager.isTokenValid)
     }
 
-    func testClearSession_clearsSessionID() {
-        settingsManager.cachedSessionID = "session123"
-        settingsManager.sessionTimestamp = Date()
+    func testClearToken_clearsToken() {
+        settingsManager.cachedToken = "jwt123"
+        settingsManager.tokenTimestamp = Date()
 
-        settingsManager.clearSession()
+        settingsManager.clearToken()
 
-        XCTAssertNil(settingsManager.cachedSessionID)
+        XCTAssertNil(settingsManager.cachedToken)
     }
 
-    func testClearSession_clearsTimestamp() {
-        settingsManager.cachedSessionID = "session123"
-        settingsManager.sessionTimestamp = Date()
+    func testClearToken_clearsTimestamp() {
+        settingsManager.cachedToken = "jwt123"
+        settingsManager.tokenTimestamp = Date()
 
-        settingsManager.clearSession()
+        settingsManager.clearToken()
 
-        XCTAssertNil(settingsManager.sessionTimestamp)
+        XCTAssertNil(settingsManager.tokenTimestamp)
     }
 
-    func testClearSession_invalidatesSession() {
-        settingsManager.cachedSessionID = "session123"
-        settingsManager.sessionTimestamp = Date()
+    func testClearToken_invalidatesToken() {
+        settingsManager.cachedToken = "jwt123"
+        settingsManager.tokenTimestamp = Date()
 
-        settingsManager.clearSession()
+        settingsManager.clearToken()
 
-        XCTAssertFalse(settingsManager.isSessionValid)
+        XCTAssertFalse(settingsManager.isTokenValid)
     }
 
     // MARK: - Reset to Defaults
@@ -254,14 +261,14 @@ final class SettingsManagerTests: XCTestCase {
         XCTAssertEqual(settingsManager.recentTags, [])
     }
 
-    func testResetToDefaults_clearsSession() {
-        settingsManager.cachedSessionID = "session123"
-        settingsManager.sessionTimestamp = Date()
+    func testResetToDefaults_clearsToken() {
+        settingsManager.cachedToken = "jwt123"
+        settingsManager.tokenTimestamp = Date()
 
         settingsManager.resetToDefaults()
 
-        XCTAssertNil(settingsManager.cachedSessionID)
-        XCTAssertNil(settingsManager.sessionTimestamp)
-        XCTAssertFalse(settingsManager.isSessionValid)
+        XCTAssertNil(settingsManager.cachedToken)
+        XCTAssertNil(settingsManager.tokenTimestamp)
+        XCTAssertFalse(settingsManager.isTokenValid)
     }
 }

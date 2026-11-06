@@ -43,6 +43,7 @@
 		A4000004 /* MapNetworkErrorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000004 /* MapNetworkErrorTests.swift */; };
 		A4000005 /* SettingsManagerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000005 /* SettingsManagerTests.swift */; };
 		A4000006 /* FlowLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000006 /* FlowLayoutTests.swift */; };
+		A4000007 /* ShioriClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4000007 /* ShioriClientTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -106,6 +107,7 @@
 		B4000004 /* MapNetworkErrorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MapNetworkErrorTests.swift; sourceTree = "<group>"; };
 		B4000005 /* SettingsManagerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsManagerTests.swift; sourceTree = "<group>"; };
 		B4000006 /* FlowLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlowLayoutTests.swift; sourceTree = "<group>"; };
+		B4000007 /* ShioriClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShioriClientTests.swift; sourceTree = "<group>"; };
 		P1000001 /* ShioriShare.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ShioriShare.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		P2000001 /* ShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		P4000001 /* ShioriShareTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ShioriShareTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -205,6 +207,7 @@
 			isa = PBXGroup;
 			children = (
 				B4000006 /* FlowLayoutTests.swift */,
+				B4000007 /* ShioriClientTests.swift */,
 				B4000004 /* MapNetworkErrorTests.swift */,
 				B4000002 /* ParseKeywordsTests.swift */,
 				B4000005 /* SettingsManagerTests.swift */,
@@ -383,6 +386,7 @@
 				A4000004 /* MapNetworkErrorTests.swift in Sources */,
 				A4000005 /* SettingsManagerTests.swift in Sources */,
 				A4000006 /* FlowLayoutTests.swift in Sources */,
+				A4000007 /* ShioriClientTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
