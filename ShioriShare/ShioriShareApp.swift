@@ -46,6 +46,7 @@ struct ShioriShareApp: App {
                     
                     NSApplication.shared.orderFrontStandardAboutPanel(options: [
                         .applicationName: "Shiori Share",
+                        .applicationVersion: AppConstants.version,
                         .credits: credits
                     ])
                 }

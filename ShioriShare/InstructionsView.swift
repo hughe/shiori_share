@@ -74,6 +74,10 @@ struct InstructionsView: View {
             Label("Shiori Share", systemImage: "books.vertical")
                 .font(.title2.weight(.semibold))
             
+            Text("Version \(AppConstants.version)")
+                .font(.caption)
+                .foregroundColor(.secondary)
+
             Text("Save bookmarks from Safari to your Shiori server")
                 .font(.body)
                 .foregroundColor(.secondary)

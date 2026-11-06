@@ -3,6 +3,11 @@ import Security
 
 enum AppConstants {
     
+    /// Read the release version from the built app so the UI stays in sync.
+    static var version: String {
+        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "Unknown"
+    }
+
     // MARK: - Bundle Identifiers
     static let mainAppBundleID = "net.emberson.shiorishare"
     static let shareExtensionBundleID = "net.emberson.shiorishare.ShareExtension"
