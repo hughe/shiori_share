@@ -5,7 +5,7 @@ claim, update, and close issues; commit and push the resulting files with Git.
 
 ## Beads migration
 
-All 171 records from `.beads/issues.jsonl` were imported via `pearls create`
+All 171 records from the former `.beads/issues.jsonl` were imported via `pearls create`
 and `pearls update`: 8 open and 163 closed. The local Beads database was
 checked against the export for issue content and status; it contained no
 additional comments, labels, or issue notes.
@@ -18,7 +18,8 @@ additional comments, labels, or issue notes.
 - Each body includes the complete original JSON record, preserving original
   creation/update/closure timestamps, ownership, estimates, and closure notes.
   Pearls timestamps reflect import time.
-- `.beads/` remains as a historical source; do not use `bd`.
+- The original `.beads/` data is available in Git history at `c6058fb`;
+  the directory and local Beads Git hooks have been removed. Do not use `bd`.
 
 Closed issues may later move into `archive/` through Pearls garbage collection.
 Use `pearls list-all --archived --json` to include them. Search old IDs in the

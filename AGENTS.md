@@ -33,7 +33,8 @@ Current test coverage:
 
 This project uses **Pearls** for issue tracking. Run `pearls quickstart` for the workflow.
 Issues live in `.pi/pearls/` and are committed and pushed with other changes.
-Do not use `bd`. The `.beads/` directory is retained as a historical migration source.
+Do not use `bd`. Legacy Beads records were migrated to Pearls; the original
+`.beads/` directory is available in Git history.
 
 ## Quick Reference
 

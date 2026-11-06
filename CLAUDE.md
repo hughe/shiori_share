@@ -198,7 +198,7 @@ When adding tests:
 
 This project uses **Pearls** for issue tracking. Run `pearls quickstart`.
 Issues are Markdown files in `.pi/pearls/`, committed and pushed with code.
-Do not use `bd`; `.beads/` is the retained historical source.
+Do not use `bd`; the original `.beads/` migration source is available in Git history.
 
 ```bash
 pearls list --json              # Show available and assigned work
