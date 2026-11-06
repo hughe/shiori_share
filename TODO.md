@@ -69,6 +69,13 @@ Companion plan (server side, test environment, prod rollout): `../shiori/TODO.md
       (token-only response, v1.8.0 shape)
 - [x] Update CLAUDE.md "Session Security" note
 
+- [x] Decode both bare v1.7.x payloads and v1.8.0 `ok`/`message` envelopes
+      for tags and bookmark creation; reject failed or malformed envelopes
+- [x] Decode v1.8.0 tag `bookmark_count`, legacy `nBookmarks`, and omitted
+      zero counts (v1.7.x uses `omitempty`)
+- [x] CLI probe distinguishes authentication rejection (401/403) from decoding
+      failures after HTTP success and other request failures
+
 ## Phase 3: Test against the test environment
 
 Test server: `shiori-emberson-test` (see `../shiori/TODO.md`, Phase 2).
@@ -79,7 +86,8 @@ Test server: `shiori-emberson-test` (see `../shiori/TODO.md`, Phase 2).
         tags load, tags autocomplete, archive and public toggles
       - Wrong password -> "Invalid username or password"
 - [ ] Test server on v1.8.0:
-      - `shiori-cli ... probe` -> `bearer` accepted, `session-id` rejected
+      - [x] `shiori-cli ... probe` -> `bearer` accepted (394 tags),
+        `session-id` fails (502); confirmed by user on 2026-11-06
       - `shiori-cli ... add https://example.com --tags cli-test` -> bookmark created
       - Bearer app build: all checks above, on iPhone and Mac share sheets
       - Restart the test machine (`fly machine restart`) and share again:

@@ -64,11 +64,42 @@ struct TagItem: Codable {
         case bookmarkCount = "nBookmarks"
     }
     
+    private enum CurrentCodingKeys: String, CodingKey {
+        case bookmarkCount = "bookmark_count"
+    }
+
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
+        let current = try decoder.container(keyedBy: CurrentCodingKeys.self)
         id = try container.decode(Int.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
-        bookmarkCount = try container.decode(Int.self, forKey: .bookmarkCount)
+        // v1.8.0 renamed this field; v1.7.x omits it when the count is zero.
+        bookmarkCount = try current.decodeIfPresent(Int.self, forKey: .bookmarkCount)
+            ?? container.decodeIfPresent(Int.self, forKey: .bookmarkCount)
+            ?? 0
+    }
+}
+
+/// Legacy endpoints return bare payloads on v1.7.x and ok/message envelopes
+/// through the response middleware on v1.8.0. Login already has its own envelope.
+private struct LegacyResponse<Value: Decodable>: Decodable {
+    let value: Value
+
+    private enum CodingKeys: String, CodingKey { case ok, message }
+
+    init(from decoder: Decoder) throws {
+        if let container = try? decoder.container(keyedBy: CodingKeys.self),
+           container.contains(.ok) {
+            guard try container.decode(Bool.self, forKey: .ok) else {
+                throw DecodingError.dataCorruptedError(
+                    forKey: .ok, in: container,
+                    debugDescription: "Server returned an unsuccessful response envelope"
+                )
+            }
+            value = try container.decode(Value.self, forKey: .message)
+        } else {
+            value = try Value(from: decoder)
+        }
     }
 }
 
@@ -234,7 +265,7 @@ struct ShioriClient {
 
         let (data, response) = try await send(request)
         try Self.checkStatus(response.statusCode)
-        return try decode(BookmarkResponse.self, from: data)
+        return try decode(LegacyResponse<BookmarkResponse>.self, from: data).value
     }
 
     /// GET /api/tags (legacy API)
@@ -244,7 +275,7 @@ struct ShioriClient {
 
         let (data, response) = try await send(request)
         try Self.checkStatus(response.statusCode)
-        return try decode([TagItem].self, from: data)
+        return try decode(LegacyResponse<[TagItem]>.self, from: data).value
     }
 
     // MARK: Request plumbing

@@ -198,6 +198,8 @@ do {
         print("GET \(ShioriClient.Path.tags) by auth style:")
 
         var accepted: [ShioriAuthStyle] = []
+        var bearerRejected = false
+        var bearerDecodingFailed = false
         for style in ShioriAuthStyle.allCases {
             var probeClient = client
             probeClient.authStyle = style
@@ -207,14 +209,28 @@ do {
                 print("  \(style.rawValue): accepted, \(tags.count) tags\(note)")
                 accepted.append(style)
             } catch {
+                if style == .bearer, let apiError = error as? ShioriAPIError {
+                    switch apiError {
+                    case .unauthorized, .invalidCredentials:
+                        bearerRejected = true
+                    case .decodingError:
+                        bearerDecodingFailed = true
+                    default:
+                        break
+                    }
+                }
                 print("  \(style.rawValue): FAILED\(note): \(describe(error))")
             }
         }
 
         if accepted.contains(.bearer) {
             print("Bearer works: the Bearer build of Shiori Share should work against this server.")
+        } else if bearerRejected {
+            print("Bearer rejected by the server (401/403). Check credentials and server authentication support.")
+        } else if bearerDecodingFailed {
+            print("Bearer request returned HTTP success, but response decoding failed. App compatibility is not verified.")
         } else {
-            print("Bearer rejected: do not switch the app to Bearer against this server yet.")
+            print("Bearer could not be verified. Resolve the request failure above before using the app against this server.")
         }
         exit(accepted.isEmpty ? 1 : 0)
 

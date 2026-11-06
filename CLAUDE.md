@@ -92,6 +92,7 @@ The app and share extension communicate via **App Groups** and **Keychain Sharin
 - Stateless HTTP client: login, add bookmark, fetch tags, status/error mapping
 - Also holds the API models and `ShioriAPIError`
 - No dependency on settings, keychain or logging, so it compiles standalone
+- Legacy tags and bookmark responses accept both bare payloads and the v1.8.0 `ok`/`message` envelope; tag counts accept `nBookmarks` and `bookmark_count`
 - `ShioriAuthStyle` selects `X-Session-Id` (Shiori v1.7.x only) or `Authorization: Bearer` (v1.7.x and v1.8.0)
 
 **shiori-cli** (`Tools/shiori-cli/main.swift`)

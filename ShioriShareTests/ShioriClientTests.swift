@@ -70,6 +70,71 @@ final class ShioriClientTests: XCTestCase {
         XCTAssertEqual(response.id, 1)
     }
 
+    func testTagsParsesV180Envelope() async throws {
+        StubURLProtocol.handler = { _ in
+            (200, #"{"ok":true,"message":[{"id":1,"name":"swift","bookmark_count":2,"deleted":false}]}"#)
+        }
+        let tags = try await client.fetchTags(auth: "jwt")
+        XCTAssertEqual(tags.count, 1)
+        XCTAssertEqual(tags[0].name, "swift")
+        XCTAssertEqual(tags[0].bookmarkCount, 2)
+    }
+
+    func testTagsDefaultsOmittedLegacyCountToZero() async throws {
+        StubURLProtocol.handler = { _ in (200, #"[{"id":1,"name":"unused"}]"#) }
+        let tags = try await client.fetchTags(auth: "jwt")
+        XCTAssertEqual(tags[0].bookmarkCount, 0)
+    }
+
+    func testTagsPreservesZeroV180Count() async throws {
+        StubURLProtocol.handler = { _ in
+            (200, #"{"ok":true,"message":[{"id":1,"name":"unused","bookmark_count":0}]}"#)
+        }
+        let tags = try await client.fetchTags(auth: "jwt")
+        XCTAssertEqual(tags[0].bookmarkCount, 0)
+    }
+
+    func testTagsParsesEmptyV180Envelope() async throws {
+        StubURLProtocol.handler = { _ in (200, #"{"ok":true,"message":[]}"#) }
+        let tags = try await client.fetchTags(auth: "jwt")
+        XCTAssertTrue(tags.isEmpty)
+    }
+
+    func testBookmarkParsesV180Envelope() async throws {
+        StubURLProtocol.handler = { _ in
+            (200, #"{"ok":true,"message":{"id":42,"url":"https://example.org","title":"Example"}}"#)
+        }
+        let bookmark = BookmarkRequest(url: "https://example.org", title: nil, excerpt: nil,
+                                       tags: nil, createArchive: true, public: 0)
+        let response = try await client.addBookmark(bookmark, auth: "jwt")
+        XCTAssertEqual(response.id, 42)
+        XCTAssertEqual(response.title, "Example")
+    }
+
+    func testTagsRejectsFailedOrMalformedEnvelopes() async throws {
+        for body in [#"{"ok":false,"message":[]}"#,
+                     #"{"ok":true,"message":{"unexpected":"dictionary"}}"#,
+                     #"{"ok":true}"#] {
+            StubURLProtocol.handler = { _ in (200, body) }
+            do {
+                _ = try await client.fetchTags(auth: "jwt")
+                XCTFail("Expected decoding failure for \(body)")
+            } catch ShioriAPIError.decodingError {
+                // A malformed payload must not look like a valid empty tag list.
+            }
+        }
+    }
+
+    func testTagsUnauthorizedRemainsAuthenticationError() async throws {
+        StubURLProtocol.handler = { _ in (401, #"{"ok":false,"message":"Unauthorized"}"#) }
+        do {
+            _ = try await client.fetchTags(auth: "jwt")
+            XCTFail("Expected unauthorized")
+        } catch ShioriAPIError.unauthorized {
+            // HTTP authentication failures are handled before payload decoding.
+        }
+    }
+
     func testWrongPasswordReturnsInvalidCredentials() async throws {
         StubURLProtocol.handler = { _ in (401, "{}") }
         do {
