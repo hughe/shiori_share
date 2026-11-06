@@ -1,6 +1,6 @@
 {
   "id": "3584d547",
-  "title": "Avoid blocking keychain dialog on first Safari share",
+  "title": "Avoid blocking keychain dialog after Safari extension updates",
   "tags": [
     "bug"
   ],
@@ -14,17 +14,20 @@
 
 ## Description
 
-On the first run of the macOS share extension from Safari, an unwanted system Keychain authorization dialog appears over the extension’s Loading screen. It says “Save to Shiori (Safari) wants to use your confidential information stored in ‘net.emberson.shiorishare’ in your keychain” and asks for the login keychain password.
+On the first run of each new version of the macOS share extension from Safari, an unwanted system Keychain authorization dialog appears over the extension’s Loading screen. It says “Save to Shiori (Safari) wants to use your confidential information stored in ‘net.emberson.shiorishare’ in your keychain” and asks for the login keychain password.
 
 The user cannot enter anything into that system dialog. Pressing Escape dismisses it and allows the extension to proceed to its own “Enter Password” screen. The user can then enter the Shiori password, and it is saved successfully.
 
 Steps to reproduce:
-1. Run the share extension from Safari for the first time.
-2. Observe the system Keychain authorization dialog; its password field does not accept input.
-3. Press Escape.
-4. Enter the Shiori password in the extension’s own password screen and continue; the password is saved.
+1. Install a new version of the macOS share extension.
+2. Run that version from Safari for the first time.
+3. Observe the system Keychain authorization dialog; its password field does not accept input.
+4. Press Escape.
+5. Enter the Shiori password in the extension’s own password screen and continue; the password is saved.
 
-Expected: The first-run flow reaches the extension’s Shiori password prompt without a blocking, unusable system Keychain dialog. Subsequent use can access the saved password normally.
+The user reports this only happens on the first run of a new extension version; subsequent runs of the same version are unaffected. The browser is Safari.
+
+Expected: The first-run flow after an extension update reaches the extension’s Shiori password prompt without a blocking, unusable system Keychain dialog. Subsequent use can access the saved password normally.
 
 Reported after installing macOS version 0.4.0. Root cause has not been investigated.
 
