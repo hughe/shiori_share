@@ -195,15 +195,19 @@ When adding tests:
 
 ## Issue Tracking
 
-This project uses **beads** (bd) for issue tracking. See `.beads/README.md` for details.
+This project uses **Pearls** for issue tracking. Run `pearls quickstart`.
+Issues are Markdown files in `.pi/pearls/`, committed and pushed with code.
+Do not use `bd`; `.beads/` is the retained historical source.
 
-Quick reference:
 ```bash
-bd ready              # Show available work
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git remote
+pearls list --json              # Show available and assigned work
+pearls get T<id>                # Inspect an issue
+pearls claim T<id> --session "$PEARLS_SESSION"  # Claim with a stable session ID
+pearls append T<id> --body "Progress update"
+pearls close T<id>              # Complete work
 ```
+
+See `.pi/pearls/README.md` for migration details and the legacy ID map.
 
 ## Important Notes
 

@@ -31,22 +31,24 @@ Current test coverage:
 
 ## Issue Tracking
 
-This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
+This project uses **Pearls** for issue tracking. Run `pearls quickstart` for the workflow.
+Issues live in `.pi/pearls/` and are committed and pushed with other changes.
+Do not use `bd`. The `.beads/` directory is retained as a historical migration source.
 
 ## Quick Reference
 
 ```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
+pearls list --json              # Find open and assigned work
+pearls get T<id>                # View issue details
+pearls claim T<id> --session "$PEARLS_SESSION"  # Claim work
+pearls append T<id> --body "Progress update"
+pearls close T<id>              # Complete work
 ```
 
-**IMPORTANT**: When starting work on a task, mark it as in progress:
-```bash
-bd update <id> --status in_progress
-```
+When starting a task, claim it with a stable, unique session ID using
+`--session` or the `PEARLS_SESSION` environment variable. Create missing tasks
+with `pearls create`. Preserve existing assignments unless explicitly taking
+on stale work. Use Pearls commands to modify issue files.
 
 ## Landing the Plane (Session Completion)
 
@@ -60,7 +62,6 @@ bd update <id> --status in_progress
 4. **PUSH TO REMOTE** - This is MANDATORY:
    ```bash
    git pull --rebase
-   bd sync
    git push
    git status  # MUST show "up to date with origin"
    ```
