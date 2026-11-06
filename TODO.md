@@ -88,6 +88,8 @@ Test server: `shiori-emberson-test` (see `../shiori/TODO.md`, Phase 2).
 - [ ] Test server on v1.8.0:
       - [x] `shiori-cli ... probe` -> `bearer` accepted (394 tags),
         `session-id` fails (502); confirmed by user on 2026-11-06
+      - [x] Installed macOS Bearer build works against the v1.8.0 test
+        environment (confirmed by user on 2026-11-06)
       - `shiori-cli ... add https://example.com --tags cli-test` -> bookmark created
       - Bearer app build: all checks above, on iPhone and Mac share sheets
       - Restart the test machine (`fly machine restart`) and share again:
